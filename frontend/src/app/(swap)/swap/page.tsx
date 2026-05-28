@@ -137,6 +137,15 @@ export default function SwapPage() {
   const [slippage, setSlippage] = useState(SLIPPAGE_DEFAULT);
   const [expirationMinutes, setExpirationMinutes] = useState(EXPIRATION_DEFAULT_MINUTES);
 
+  const [riskAccepted, setRiskAccepted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const stored = localStorage.getItem(RISK_ACCEPTANCE_KEY);
+      return stored ? JSON.parse(stored).accepted === true : false;
+    } catch {
+      return false;
+    }
+  });
   const [riskModalOpen, setRiskModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -167,8 +176,17 @@ export default function SwapPage() {
             ? "Quote Unavailable"
             : "Initialize Atomic Swap";
 
+  const handleRiskAccepted = () => {
+    setRiskAccepted(true);
+    setRiskModalOpen(false);
+  };
+
   const handleSubmit = () => {
     if (!canSubmit) return;
+    if (!riskAccepted) {
+      setRiskModalOpen(true);
+      return;
+    }
   };
 
   const handleSourceSelect = (chain: string, asset: string) => {
@@ -326,6 +344,12 @@ export default function SwapPage() {
           )}
         </CardFooter>
       </Card>
+
+      <RiskDisclosureModal
+        open={riskModalOpen}
+        onAccept={handleRiskAccepted}
+        onClose={() => setRiskModalOpen(false)}
+      />
     </div>
   );
 }
