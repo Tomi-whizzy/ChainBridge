@@ -27,7 +27,10 @@
     "build-storybook": "storybook build",
     "types:generate": "tsx scripts/generate-api-types.ts",
     "types:check": "tsc --noEmit --project tsconfig.json",
-    "prebuild": "npm run types:generate"
+    "prebuild": "npm run types:generate",
+    "analyze": "ANALYZE=true npm run build",
+    "analyze:server": "BUNDLE_ANALYZE=server npm run build",
+    "analyze:browser": "BUNDLE_ANALYZE=browser npm run build"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^16.2.4",
