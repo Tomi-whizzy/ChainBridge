@@ -152,6 +152,24 @@ export default function SwapPage() {
   const sourceInfo = useMemo(() => CHAINS.find((chain) => chain.id === sourceChain), [sourceChain]);
   const destInfo = useMemo(() => CHAINS.find((chain) => chain.id === destChain), [destChain]);
   const isSameChain = sourceChain === destChain;
+  const isAmountValid = Number.isFinite(Number(amount)) && Number(amount) > 0;
+  const canSubmit = isConnected && isAmountValid && !quoteLoading && !quoteError && !isSameChain;
+
+  const submitLabel = !isConnected
+    ? "Connect Wallet to Swap"
+    : !isAmountValid
+      ? "Enter an Amount"
+      : isSameChain
+        ? "Select Different Chains"
+        : quoteLoading
+          ? "Fetching Quote…"
+          : quoteError
+            ? "Quote Unavailable"
+            : "Initialize Atomic Swap";
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+  };
 
   const handleSourceSelect = (chain: string, asset: string) => {
     setSourceChain(chain as ChainId);
@@ -293,8 +311,19 @@ export default function SwapPage() {
           />
         </CardContent>
 
-        <CardFooter>
-          <Button className="w-full">Initialize Atomic Swap</Button>
+        <CardFooter className="flex-col gap-2">
+          <Button
+            className="w-full"
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            {submitLabel}
+          </Button>
+          {!isConnected && (
+            <p className="text-xs text-text-muted text-center">
+              Connect a wallet to continue.
+            </p>
+          )}
         </CardFooter>
       </Card>
     </div>
