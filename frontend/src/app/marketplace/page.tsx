@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { OrderBookList } from "@/components/marketplace/OrderBookList";
 import { OrderTakeModal } from "@/components/marketplace/OrderTakeModal";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/transactionLifecycle";
 import { getExplorerUrl } from "@/lib/explorers";
 import { useUnifiedWallet } from "@/components/wallet/UnifiedWalletProvider";
+import { formatTokenAmount } from "@/lib/format";
 
 function fundingChainForOrder(order: Order) {
   return order.side === "buy" ? order.chainOut : order.chainIn;
@@ -103,6 +104,14 @@ export default function MarketplacePage() {
     updateOrder(order.id, { status: OrderStatus.FILLED });
   };
 
+  const vol24h = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const total = orders
+      .filter((o) => new Date(o.timestamp).getTime() > cutoff)
+      .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    return formatTokenAmount(total, { notation: "compact", maximumFractionDigits: 1 });
+  }, [orders]);
+
   const closeDrawer = () => {
     setIsModalOpen(false);
     setSelectedOrder(null);
@@ -159,7 +168,7 @@ export default function MarketplacePage() {
             <div className="mt-4 grid grid-cols-2 gap-4 text-center">
               <div>
                 <p className="text-[10px] font-bold text-text-muted uppercase">24h Vol</p>
-                <p className="text-lg font-black text-text-primary">$1.2M</p>
+                <p className="text-lg font-black text-text-primary">{vol24h}</p>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-text-muted uppercase">Active</p>
