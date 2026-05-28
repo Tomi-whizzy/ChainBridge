@@ -88,6 +88,9 @@ export function OrderBookList({ orders, onTakeOrder }: OrderBookListProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [sideFilter, setSideFilter] = useState<OrderSide | "all">(
     () => (searchParams.get("side") as OrderSide | "all") ?? "all"
@@ -265,6 +268,7 @@ export function OrderBookList({ orders, onTakeOrder }: OrderBookListProps) {
 
       <OrderListTable
         orders={filteredOrders}
+        loading={!mounted}
         sortKey={sortConfig.key}
         sortDirection={sortConfig.direction}
         onSort={handleSort}
