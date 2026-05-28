@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowRightLeft, Info, Settings, Share2, Vote, Waves } from "lucide-react";
 
 import { Badge, Button, Card, CardContent, CardFooter, CardHeader, ChainAssetSelector, Input } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import type { Chain as SelectorChain } from "@/components/ui";
 
 const QuotePreviewCard = dynamic(() =>
@@ -119,7 +120,7 @@ function buildSigningLifecycle(
 }
 
 export default function SwapPage() {
-  const { isConnected } = useUnifiedWallet();
+  const { isConnected, activeChain, balance } = useUnifiedWallet();
   const { localizePath } = useI18n();
   const [amount, setAmount] = useState("");
   const [orderType, setOrderType] = useState<"market" | "limit" | "twap">("limit");
@@ -163,6 +164,33 @@ export default function SwapPage() {
   const isSameChain = sourceChain === destChain;
   const isAmountValid = Number.isFinite(Number(amount)) && Number(amount) > 0;
   const canSubmit = isConnected && isAmountValid && !quoteLoading && !quoteError && !isSameChain;
+
+  // Inject wallet balance into the from-chain asset so ChainAssetSelector can display it (#383)
+  const fromChainData = useMemo(() => {
+    if (!balance || activeChain !== sourceChain) return CHAIN_SELECTOR_DATA;
+    return CHAIN_SELECTOR_DATA.map((chain) =>
+      chain.id !== activeChain
+        ? chain
+        : {
+            ...chain,
+            assets: chain.assets.map((asset) => ({
+              ...asset,
+              balance: asset.symbol === fromAsset ? balance : undefined,
+            })),
+          }
+    );
+  }, [balance, activeChain, sourceChain, fromAsset]);
+
+  // Balance available for quick-amount shortcuts — only when wallet chain matches source chain
+  const walletBalance = activeChain === sourceChain ? (balance ?? null) : null;
+
+  const applyQuickAmount = (label: string) => {
+    const bal = parseFloat(walletBalance ?? "0");
+    if (!bal || bal <= 0) return;
+    const multiplier = label === "Max" ? 1 : parseFloat(label) / 100;
+    const raw = (bal * multiplier).toFixed(8).replace(/\.?0+$/, "");
+    setAmount(raw);
+  };
 
   const submitLabel = !isConnected
     ? "Connect Wallet to Swap"
@@ -278,7 +306,7 @@ export default function SwapPage() {
     : "";
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="mx-auto max-w-3xl">
       <FeeWarningBanner chains={[sourceChain, destChain]} />
 
       <Card>
@@ -289,12 +317,12 @@ export default function SwapPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <ChainAssetSelector
-              chains={CHAIN_SELECTOR_DATA}
+              chains={fromChainData}
               selectedChain={sourceChain}
               selectedAsset={fromAsset}
               onSelect={handleSourceSelect}
               label="From"
-              showBalance={false}
+              showBalance={!!walletBalance}
             />
             <ChainAssetSelector
               chains={CHAIN_SELECTOR_DATA}
@@ -313,12 +341,32 @@ export default function SwapPage() {
             </p>
           )}
 
-          <Input
-            placeholder="0.00"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+          <div className="space-y-2">
+            <Input
+              placeholder="0.00"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <div className="flex gap-1.5">
+              {(["25%", "50%", "75%", "Max"] as const).map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  disabled={!walletBalance}
+                  onClick={() => applyQuickAmount(label)}
+                  className={cn(
+                    "flex-1 rounded-md py-1 text-xs font-medium transition-colors",
+                    walletBalance
+                      ? "bg-surface-raised text-text-secondary hover:bg-brand-500/10 hover:text-brand-500 cursor-pointer"
+                      : "bg-surface text-text-muted opacity-40 cursor-not-allowed"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <QuotePreviewCard
             quote={quote}

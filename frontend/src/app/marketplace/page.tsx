@@ -8,8 +8,9 @@ import { DepthChart } from "@/components/marketplace/DepthChart";
 import { useOrderBookStore, useMockOrders } from "@/hooks/useOrderBook";
 import { useTransactionStore } from "@/hooks/useTransactions";
 import { Order, OrderStatus, TransactionStatus } from "@/types";
-import { Badge, Button } from "@/components/ui";
-import { ShoppingBag, TrendingUp, Info, Plus } from "lucide-react";
+import { Button } from "@/components/ui";
+import { TrendingUp, Info, Plus } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   buildCompletedLifecycle,
   buildTransactionLifecycle,
@@ -110,39 +111,27 @@ export default function MarketplacePage() {
   };
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-12 md:py-20 animate-fade-in">
-      <div className="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl">
-          <div className="mb-4 flex items-center gap-2">
-            <Badge
-              variant="info"
-              className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-            >
-              P2P Marketplace
-            </Badge>
-          </div>
-          <h1 className="text-4xl font-extrabold text-text-primary tracking-tight sm:text-6xl">
-            Order Book
-          </h1>
-          <p className="mt-6 text-xl text-text-secondary leading-relaxed">
-            Browse active cross-chain swap offers or create your own. All trades are protected by
-            trustless hash-timelock contracts.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Link href="/orders">
-            <Button variant="secondary" className="h-12 px-6">
-              My Orders
-            </Button>
-          </Link>
-          <Button variant="primary" className="h-12 px-6 shadow-glow-md" icon={<Plus size={18} />}>
+    <div className="animate-fade-in">
+      <PageHeader
+        title="Order Book"
+        subtitle="Browse active cross-chain swap offers or create your own. All trades are protected by trustless hash-timelock contracts."
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Marketplace", isCurrent: true },
+        ]}
+        primaryAction={
+          <Button variant="primary" className="h-10 px-5 shadow-glow-sm" icon={<Plus size={16} />}>
             Create Order
           </Button>
-        </div>
-      </div>
+        }
+        secondaryActions={[
+          <Link key="my-orders" href="/orders">
+            <Button variant="secondary" className="h-10 px-5">My Orders</Button>
+          </Link>,
+        ]}
+      />
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+      <div className="pt-8 grid grid-cols-1 gap-8 lg:grid-cols-4">
         <div className="lg:col-span-3 space-y-8">
           <OrderBookList orders={orders} onTakeOrder={handleTakeOrder} />
         </div>
