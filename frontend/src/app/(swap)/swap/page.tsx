@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowRightLeft, Info, Settings, Share2, Vote, Waves } from "lucide-react";
 
-import { Badge, Button, Card, CardContent, CardFooter, CardHeader, Input } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardFooter, CardHeader, ChainAssetSelector, Input } from "@/components/ui";
+import type { Chain as SelectorChain } from "@/components/ui";
 
 const QuotePreviewCard = dynamic(() =>
   import("@/components/swap/QuotePreviewCard").then((mod) => mod.QuotePreviewCard),
@@ -48,6 +49,23 @@ const CHAINS: Array<{ id: ChainId; label: string; tokens: string[] }> = [
   { id: "bitcoin", label: "Bitcoin", tokens: ["BTC"] },
   { id: "ethereum", label: "Ethereum", tokens: ["ETH", "USDC"] },
 ];
+
+const TOKEN_NAMES: Record<string, string> = {
+  XLM: "Stellar Lumens",
+  USDC: "USD Coin",
+  BTC: "Bitcoin",
+  ETH: "Ethereum",
+};
+
+const CHAIN_SELECTOR_DATA: SelectorChain[] = CHAINS.map((c) => ({
+  id: c.id,
+  name: c.label,
+  assets: c.tokens.map((symbol) => ({
+    symbol,
+    name: TOKEN_NAMES[symbol] ?? symbol,
+    chain: c.id,
+  })),
+}));
 
 function buildSigningLifecycle(
   current: TransactionStepKey,
@@ -119,6 +137,15 @@ export default function SwapPage() {
   const [slippage, setSlippage] = useState(SLIPPAGE_DEFAULT);
   const [expirationMinutes, setExpirationMinutes] = useState(EXPIRATION_DEFAULT_MINUTES);
 
+  const [riskAccepted, setRiskAccepted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const stored = localStorage.getItem(RISK_ACCEPTANCE_KEY);
+      return stored ? JSON.parse(stored).accepted === true : false;
+    } catch {
+      return false;
+    }
+  });
   const [riskModalOpen, setRiskModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -133,6 +160,60 @@ export default function SwapPage() {
 
   const sourceInfo = useMemo(() => CHAINS.find((chain) => chain.id === sourceChain), [sourceChain]);
   const destInfo = useMemo(() => CHAINS.find((chain) => chain.id === destChain), [destChain]);
+  const isSameChain = sourceChain === destChain;
+  const isAmountValid = Number.isFinite(Number(amount)) && Number(amount) > 0;
+  const canSubmit = isConnected && isAmountValid && !quoteLoading && !quoteError && !isSameChain;
+
+  const submitLabel = !isConnected
+    ? "Connect Wallet to Swap"
+    : !isAmountValid
+      ? "Enter an Amount"
+      : isSameChain
+        ? "Select Different Chains"
+        : quoteLoading
+          ? "Fetching Quote…"
+          : quoteError
+            ? "Quote Unavailable"
+            : "Initialize Atomic Swap";
+
+  const handleRiskAccepted = () => {
+    setRiskAccepted(true);
+    setRiskModalOpen(false);
+    setReviewModalOpen(true);
+  };
+
+  const handleReviewConfirm = () => {
+    setIsConfirming(true);
+    setReviewModalOpen(false);
+    signingGenRef.current += 1;
+    setSigningLifecycle(buildSigningLifecycle("sign", "active", "pending", "pending"));
+    setSigningModalOpen(true);
+    setIsConfirming(false);
+  };
+
+  const handleRetrySign = () => {
+    signingGenRef.current += 1;
+    setSigningLifecycle(buildSigningLifecycle("sign", "active", "pending", "pending"));
+  };
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    if (!riskAccepted) {
+      setRiskModalOpen(true);
+      return;
+    }
+    setReviewModalOpen(true);
+  };
+
+  const handleSourceSelect = (chain: string, asset: string) => {
+    setSourceChain(chain as ChainId);
+    setFromAsset(asset);
+  };
+
+  const handleDestSelect = (chain: string, asset: string) => {
+    setDestChain(chain as ChainId);
+    setToAsset(asset);
+  };
 
   useEffect(() => {
     const sourceTokens = sourceInfo?.tokens ?? [];
@@ -206,6 +287,32 @@ export default function SwapPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <ChainAssetSelector
+              chains={CHAIN_SELECTOR_DATA}
+              selectedChain={sourceChain}
+              selectedAsset={fromAsset}
+              onSelect={handleSourceSelect}
+              label="From"
+              showBalance={false}
+            />
+            <ChainAssetSelector
+              chains={CHAIN_SELECTOR_DATA}
+              selectedChain={destChain}
+              selectedAsset={toAsset}
+              onSelect={handleDestSelect}
+              label="To"
+              showBalance={false}
+            />
+          </div>
+
+          {isSameChain && (
+            <p className="flex items-center gap-1.5 text-sm text-amber-500">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Source and destination chains must be different.
+            </p>
+          )}
+
           <Input
             placeholder="0.00"
             type="number"
@@ -238,10 +345,58 @@ export default function SwapPage() {
           />
         </CardContent>
 
-        <CardFooter>
-          <Button className="w-full">Initialize Atomic Swap</Button>
+        <CardFooter className="flex-col gap-2">
+          <Button
+            className="w-full"
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            {submitLabel}
+          </Button>
+          {!isConnected && (
+            <p className="text-xs text-text-muted text-center">
+              Connect a wallet to continue.
+            </p>
+          )}
         </CardFooter>
       </Card>
+
+      <RiskDisclosureModal
+        open={riskModalOpen}
+        onAccept={handleRiskAccepted}
+        onClose={() => setRiskModalOpen(false)}
+      />
+
+      <SwapReviewModal
+        open={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        onConfirm={handleReviewConfirm}
+        isConfirming={isConfirming}
+        swapDetails={{
+          fromAsset,
+          fromChain: sourceChain,
+          fromAmount: amount,
+          toAsset,
+          toChain: destChain,
+          toAmount,
+          estimatedFees:
+            quote?.feeBreakdown?.total_usd_estimate != null
+              ? `$${quote.feeBreakdown.total_usd_estimate.toFixed(2)}`
+              : "—",
+          timelockHours,
+          route: `${sourceChain} → ${destChain}`,
+          slippage,
+          expirationMinutes,
+        }}
+      />
+
+      <SwapSigningModal
+        open={signingModalOpen}
+        onClose={() => setSigningModalOpen(false)}
+        onCancel={() => setSigningModalOpen(false)}
+        onRetry={handleRetrySign}
+        lifecycle={signingLifecycle}
+      />
     </div>
   );
 }
