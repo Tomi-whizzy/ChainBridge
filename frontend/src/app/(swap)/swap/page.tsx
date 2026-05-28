@@ -179,6 +179,21 @@ export default function SwapPage() {
   const handleRiskAccepted = () => {
     setRiskAccepted(true);
     setRiskModalOpen(false);
+    setReviewModalOpen(true);
+  };
+
+  const handleReviewConfirm = () => {
+    setIsConfirming(true);
+    setReviewModalOpen(false);
+    signingGenRef.current += 1;
+    setSigningLifecycle(buildSigningLifecycle("sign", "active", "pending", "pending"));
+    setSigningModalOpen(true);
+    setIsConfirming(false);
+  };
+
+  const handleRetrySign = () => {
+    signingGenRef.current += 1;
+    setSigningLifecycle(buildSigningLifecycle("sign", "active", "pending", "pending"));
   };
 
   const handleSubmit = () => {
@@ -187,6 +202,7 @@ export default function SwapPage() {
       setRiskModalOpen(true);
       return;
     }
+    setReviewModalOpen(true);
   };
 
   const handleSourceSelect = (chain: string, asset: string) => {
@@ -349,6 +365,37 @@ export default function SwapPage() {
         open={riskModalOpen}
         onAccept={handleRiskAccepted}
         onClose={() => setRiskModalOpen(false)}
+      />
+
+      <SwapReviewModal
+        open={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        onConfirm={handleReviewConfirm}
+        isConfirming={isConfirming}
+        swapDetails={{
+          fromAsset,
+          fromChain: sourceChain,
+          fromAmount: amount,
+          toAsset,
+          toChain: destChain,
+          toAmount,
+          estimatedFees:
+            quote?.feeBreakdown?.total_usd_estimate != null
+              ? `$${quote.feeBreakdown.total_usd_estimate.toFixed(2)}`
+              : "—",
+          timelockHours,
+          route: `${sourceChain} → ${destChain}`,
+          slippage,
+          expirationMinutes,
+        }}
+      />
+
+      <SwapSigningModal
+        open={signingModalOpen}
+        onClose={() => setSigningModalOpen(false)}
+        onCancel={() => setSigningModalOpen(false)}
+        onRetry={handleRetrySign}
+        lifecycle={signingLifecycle}
       />
     </div>
   );
