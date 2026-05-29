@@ -664,7 +664,11 @@ export default function HTLCStatusPage() {
                   emptyMessage="No HTLC lifecycle events yet."
                 />
 
-                <div className="space-y-3 rounded-2xl border border-border bg-surface-raised p-4">
+                {/* #419 — flattened from a nested Card-like surface; the
+                    parent Card variant="glass" already establishes the
+                    container, so this subsection uses a subtle bg tint +
+                    smaller rounded-xl radius instead of a second border. */}
+                <div className="space-y-3 rounded-xl bg-surface-raised/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
                     Actions
                   </p>

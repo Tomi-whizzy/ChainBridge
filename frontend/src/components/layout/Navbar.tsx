@@ -9,7 +9,11 @@ import { WalletConnect } from "../swap/WalletConnect";
 import { useSettingsStore } from "@/hooks/useSettings";
 import { Layers, Menu, Globe, Cpu } from "lucide-react";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { SUPPORTED_LOCALES, stripLocaleFromPathname } from "@/lib/i18n/config";
+import {
+  SUPPORTED_LOCALES,
+  buildLocalizedPath,
+  getLocaleFromPathname,
+} from "@/lib/i18n/config";
 import { CommandPalette } from "./CommandPalette";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { HealthIndicator } from "@/components/ui/HealthIndicator";
@@ -64,10 +68,18 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-2 mr-1">
               <select
                 aria-label="Language selector"
-                value={pathname.split("/").filter(Boolean)[0] || "en"}
+                /* #422 — `value` previously used the raw first path
+                    segment, which displayed e.g. `dashboard` on
+                    `/dashboard/orders` (a non-locale route). Going through
+                    `getLocaleFromPathname` consults SUPPORTED_LOCALES and
+                    falls back to DEFAULT_LOCALE — so the select always
+                    renders a valid option, and switching reliably
+                    preserves the current route via `buildLocalizedPath`. */
+                value={getLocaleFromPathname(pathname)}
                 onChange={(event) => {
-                  const basePath = stripLocaleFromPathname(pathname);
-                  router.push(`/${event.target.value}${basePath === "/" ? "" : basePath}`);
+                  router.push(
+                    buildLocalizedPath(pathname, event.target.value as (typeof SUPPORTED_LOCALES)[number]),
+                  );
                 }}
                 className="rounded-lg border border-border bg-surface-overlay px-2 py-1 text-xs font-medium text-text-secondary outline-none transition hover:border-brand-500/50"
               >
