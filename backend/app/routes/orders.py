@@ -16,6 +16,21 @@ from app.ws.events import emit_order_event, EventType
 router = APIRouter()
 matching_service = OrderMatchingService()
 
+ALLOWED_ORDER_STATUSES = {"open", "matched", "filled", "cancelled", "expired"}
+
+
+def validate_order_status_filter(status: Optional[str]) -> Optional[str]:
+    if status is None:
+        return None
+    normalized = status.lower()
+    if normalized not in ALLOWED_ORDER_STATUSES:
+        allowed = ", ".join(sorted(ALLOWED_ORDER_STATUSES))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid order status '{status}'. Allowed values: {allowed}",
+        )
+    return normalized
+
 
 @router.post("/", response_model=OrderResponse, status_code=201)
 async def create_order(
@@ -63,6 +78,7 @@ async def list_orders(
     offset: Annotated[int, Query(ge=0)] = 0,
     db: AsyncSession = Depends(get_db),
 ):
+    status = validate_order_status_filter(status)
     cache_key = f"orders:{from_chain}:{to_chain}:{status}:{limit}:{offset}"
     cache = CacheService(get_redis())
     cached = await cache.get(cache_key)
