@@ -45,7 +45,7 @@ export enum TransactionStatus {
 
 export type TransactionStepKey = "approval" | "sign" | "broadcast" | "confirm";
 
-export type TransactionStepStatus = "idle" | "active" | "completed" | "error";
+export type TransactionStepStatus = "idle" | "active" | "completed" | "error" | "pending";
 
 export interface TransactionStep {
   key: TransactionStepKey;

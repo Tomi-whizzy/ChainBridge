@@ -153,7 +153,7 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+      <div className="pt-8 grid grid-cols-1 gap-8 lg:grid-cols-4">
         <div className="lg:col-span-3 space-y-8">
           <OrderBookList orders={orders} onTakeOrder={handleTakeOrder} />
         </div>
