@@ -27,6 +27,25 @@ def get_redis() -> aioredis.Redis:
     return redis_pool
 
 
+async def check_redis_health() -> dict:
+    """Lightweight Redis PING probe used by /health (#428).
+
+    Returns a `{status, detail?}` dict. Never raises — Redis being down
+    surfaces as `degraded` rather than a 500, so the rest of the health
+    response (DB, Stellar) still reaches the caller.
+    """
+    if not redis_pool:
+        return {"status": "degraded", "detail": "not initialised"}
+    try:
+        pong = await redis_pool.ping()
+        return {"status": "healthy"} if pong else {
+            "status": "degraded",
+            "detail": "ping returned falsy",
+        }
+    except Exception as exc:  # noqa: BLE001 - intentionally broad
+        return {"status": "degraded", "detail": str(exc)[:200]}
+
+
 class CacheService:
     """Caching helper with JSON serialization and TTL support."""
 

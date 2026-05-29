@@ -1,5 +1,10 @@
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
+
+
+# The default JWT secret shipped with the repo. Used during local development
+# but explicitly rejected on startup when `debug` is False (#430).
+DEFAULT_JWT_SECRET = "change-me-in-production"
 
 
 class Settings(BaseSettings):
@@ -15,7 +20,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # JWT
-    jwt_secret_key: str = "change-me-in-production"
+    jwt_secret_key: str = DEFAULT_JWT_SECRET
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 60
 
@@ -47,6 +52,19 @@ class Settings(BaseSettings):
             if normalized in {"debug", "dev", "development", "true", "1", "on"}:
                 return True
         return value
+
+    @model_validator(mode="after")
+    def reject_default_jwt_secret_in_production(self) -> "Settings":
+        """#430 — non-debug mode must not start with the bundled default
+        secret. The error names the offending setting and the env var the
+        operator should change so the cause is obvious from the logs."""
+        if not self.debug and self.jwt_secret_key == DEFAULT_JWT_SECRET:
+            raise ValueError(
+                "Refusing to start in production with the default JWT secret. "
+                "Set the `JWT_SECRET_KEY` environment variable to a unique value "
+                "(e.g. a 32-byte random hex string) before deploying."
+            )
+        return self
 
     class Config:
         env_file = ".env"

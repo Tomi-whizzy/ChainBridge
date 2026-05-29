@@ -75,9 +75,10 @@ async def root():
 async def health_check():
     from sqlalchemy import text
     from app.config.database import engine
-    
+    from app.config.redis import check_redis_health
+
     stellar_health = await stellar_client.health_check()
-    
+
     # Check database connectivity with lightweight query
     db_status = "healthy"
     try:
@@ -85,13 +86,23 @@ async def health_check():
             await conn.execute(text("SELECT 1"))
     except Exception:
         db_status = "degraded"
-    
-    overall_status = "healthy" if db_status == "healthy" and stellar_health.get("status") == "healthy" else "degraded"
-    
+
+    # #428 — Redis PING probe; never crashes the endpoint.
+    redis_health = await check_redis_health()
+
+    overall_status = (
+        "healthy"
+        if db_status == "healthy"
+        and stellar_health.get("status") == "healthy"
+        and redis_health.get("status") == "healthy"
+        else "degraded"
+    )
+
     return {
         "status": overall_status,
         "stellar": stellar_health,
         "database": {"status": db_status},
+        "redis": redis_health,
     }
 
 
