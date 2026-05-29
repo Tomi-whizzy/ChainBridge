@@ -76,7 +76,26 @@ export function TransactionFeed({ transactions, isLoading }: TransactionFeedProp
 
   useEffect(() => {
     setIsHydrated(true);
-  }, []);
+    const txId = searchParams.get("tx_id");
+    if (txId) {
+      setSelectedId(txId);
+    }
+  }, [searchParams]);
+
+  const handleSelectTransaction = (id: string) => {
+    setSelectedId(id);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tx_id", id);
+    router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedId(null);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("tx_id");
+    const newSearch = newParams.toString();
+    router.push(newSearch ? `${pathname}?${newSearch}` : pathname, { scroll: false });
+  };
 
   const selectedTx = transactions.find((transaction) => transaction.id === selectedId) ?? null;
 
@@ -355,7 +374,7 @@ export function TransactionFeed({ transactions, isLoading }: TransactionFeedProp
               </thead>
               <tbody className="divide-y divide-border/50">
                 {visibleTransactions.map((tx) => (
-                  <TransactionRow key={tx.id} tx={tx} onSelect={() => setSelectedId(tx.id)} />
+                  <TransactionRow key={tx.id} tx={tx} onSelect={() => handleSelectTransaction(tx.id)} />
                 ))}
               </tbody>
             </table>
@@ -420,7 +439,7 @@ export function TransactionFeed({ transactions, isLoading }: TransactionFeedProp
       {selectedTx && (
         <TransactionDetailModal
           tx={selectedTx}
-          onClose={() => setSelectedId(null)}
+          onClose={() => handleCloseModal()}
           onRetry={
             selectedTx.lifecycle?.retryable ? () => void retryTransaction(selectedTx) : undefined
           }
