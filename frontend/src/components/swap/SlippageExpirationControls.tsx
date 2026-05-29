@@ -37,6 +37,10 @@ export function SlippageExpirationControls({
     Number.isNaN(slippage) || slippage < SLIPPAGE_MIN || slippage > SLIPPAGE_MAX;
   const slippageHigh = !slippageInvalid && slippage > 5;
 
+  const slippageErrorMessage = slippageInvalid
+    ? `Must be between ${SLIPPAGE_MIN}% and ${SLIPPAGE_MAX}%`
+    : null;
+
   return (
     <div className="rounded-xl border border-border bg-background/60 p-4 space-y-5">
       <p className="text-sm font-medium text-text-primary">Slippage &amp; Expiration</p>
@@ -59,6 +63,8 @@ export function SlippageExpirationControls({
                 const v = parseFloat(e.target.value);
                 onSlippageChange(Number.isNaN(v) ? SLIPPAGE_DEFAULT : v);
               }}
+              aria-invalid={slippageInvalid}
+              aria-describedby={slippageInvalid ? "slippage-error" : undefined}
               className="w-20 rounded-lg border border-border bg-surface-raised px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-500/50"
             />
             <span className="text-sm text-text-muted">%</span>
@@ -80,10 +86,10 @@ export function SlippageExpirationControls({
             ))}
           </div>
         </div>
-        {slippageInvalid && (
-          <p className="flex items-center gap-1.5 text-xs text-status-error">
+        {slippageErrorMessage && (
+          <p id="slippage-error" className="flex items-center gap-1.5 text-xs text-status-error">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            Must be between {SLIPPAGE_MIN}% and {SLIPPAGE_MAX}%
+            {slippageErrorMessage}
           </p>
         )}
         {slippageHigh && (

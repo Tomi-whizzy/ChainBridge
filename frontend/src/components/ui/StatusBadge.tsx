@@ -163,7 +163,7 @@ export function StatusBadge({
         "inline-flex items-center rounded-full border font-bold uppercase tracking-wider",
         VARIANT_STYLES[config.variant],
         SIZE_STYLES[size].badge,
-        isAnimated && "animate-pulse",
+        isAnimated && "motion-safe:animate-pulse",
         className
       )}
       {...props}
@@ -217,9 +217,11 @@ export function StatusDot({
         "inline-block rounded-full",
         dotSize,
         dotColor,
-        (pulse || variant === "processing") && "animate-pulse",
+        (pulse || variant === "processing") && "motion-safe:animate-pulse",
         className
       )}
+      aria-label={variant}
+      role="status"
     />
   );
 }

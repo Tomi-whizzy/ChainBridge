@@ -49,7 +49,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,10 +73,25 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    from sqlalchemy import text
+    from app.config.database import engine
+    
     stellar_health = await stellar_client.health_check()
+    
+    # Check database connectivity with lightweight query
+    db_status = "healthy"
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "degraded"
+    
+    overall_status = "healthy" if db_status == "healthy" and stellar_health.get("status") == "healthy" else "degraded"
+    
     return {
-        "status": "healthy",
+        "status": overall_status,
         "stellar": stellar_health,
+        "database": {"status": db_status},
     }
 
 

@@ -77,7 +77,7 @@ export function Sidebar() {
         <div className="rounded-2xl bg-surface-overlay p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Status</p>
           <div className="mt-2 flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-status-success animate-pulse shadow-[0_0_8px_rgba(var(--status-success),0.4)]" />
+            <div className="h-2 w-2 rounded-full bg-status-success motion-safe:animate-pulse shadow-[0_0_8px_rgba(var(--status-success),0.4)]" />
             <span className="text-xs font-medium text-text-secondary">Network Online</span>
           </div>
         </div>
