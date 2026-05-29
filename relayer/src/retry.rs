@@ -55,13 +55,16 @@ impl RetryQueue {
     }
 
     /// Mark a transaction as failed and schedule next retry.
-    pub async fn retry_failed(&self, id: &str, max_attempts: u32) {
+    ///
+    /// Delay follows exponential backoff (2^attempt seconds) capped at `max_backoff_secs`
+    /// so the queue cannot grow without bound on long-running retries.
+    pub async fn retry_failed(&self, id: &str, max_attempts: u32, max_backoff_secs: u64) {
         let mut queue = self.queue.lock().await;
         if let Some(tx) = queue.get_mut(id) {
             tx.attempt += 1;
             if tx.attempt < max_attempts {
-                // Exponential backoff: 2^attempt seconds
-                let delay_secs = 2u64.pow(tx.attempt);
+                // Exponential backoff capped at max_backoff_secs
+                let delay_secs = 2u64.pow(tx.attempt).min(max_backoff_secs);
                 tx.next_retry_at = std::time::SystemTime::now() + std::time::Duration::from_secs(delay_secs);
             } else {
                 // Max attempts reached, remove from queue
@@ -113,7 +116,7 @@ impl RetryProcessor {
                     Err(e) => {
                         self.metrics.mark_tx_error(&tx.chain);
                         println!("Transaction {} failed on attempt {}: {}", tx.id, tx.attempt + 1, e);
-                        self.queue.retry_failed(&tx.id, tx.max_attempts).await;
+                        self.queue.retry_failed(&tx.id, tx.max_attempts, self.config.max_retry_backoff_secs).await;
                         if tx.attempt + 1 >= tx.max_attempts {
                             self.metrics.mark_tx_retry_failure(&tx.chain);
                             // TODO: Send failure notification
@@ -133,5 +136,58 @@ impl RetryProcessor {
     /// Get the retry queue for enqueuing transactions.
     pub fn queue(&self) -> &Arc<RetryQueue> {
         &self.queue
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_tx(id: &str, attempt: u32, max_attempts: u32) -> RetryableTransaction {
+        RetryableTransaction {
+            id: id.to_string(),
+            chain: "stellar".into(),
+            tx_data: vec![],
+            attempt,
+            max_attempts,
+            next_retry_at: std::time::SystemTime::now(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_retry_backoff_is_capped() {
+        let queue = RetryQueue::new();
+        // attempt=10 would normally give 2^11 = 2048s after increment, well above any cap
+        queue.enqueue(make_tx("tx-cap", 10, 20)).await;
+
+        let cap = 60u64;
+        queue.retry_failed("tx-cap", 20, cap).await;
+
+        let status = queue.status().await;
+        let updated = status.get("tx-cap").expect("tx should still be in queue");
+        let delay = updated
+            .next_retry_at
+            .duration_since(std::time::SystemTime::now())
+            .unwrap_or_default();
+        assert!(
+            delay.as_secs() <= cap,
+            "backoff {}s exceeds cap {}s",
+            delay.as_secs(),
+            cap
+        );
+    }
+
+    #[tokio::test]
+    async fn test_retry_removed_at_max_attempts() {
+        let queue = RetryQueue::new();
+        queue.enqueue(make_tx("tx-exhaust", 4, 5)).await;
+
+        queue.retry_failed("tx-exhaust", 5, 300).await;
+
+        let status = queue.status().await;
+        assert!(
+            !status.contains_key("tx-exhaust"),
+            "exhausted tx should be removed from queue"
+        );
     }
 }

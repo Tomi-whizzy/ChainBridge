@@ -2,16 +2,39 @@
 //!
 //! Handles submitting proofs and HTLC transactions to Bitcoin, Ethereum, and Stellar.
 
+use std::fmt;
+
 use crate::config::RelayerConfig;
 use crate::retry::RetryableTransaction;
 use reqwest::Client;
+
+/// Typed error returned by transaction submission functions.
+#[derive(Debug)]
+pub enum SubmitError {
+    /// The requested chain is not supported by this relayer.
+    UnsupportedChain(String),
+    /// A network or RPC-level error occurred during submission.
+    NetworkError(String),
+    /// The network accepted the request but rejected the transaction.
+    Rejected(String),
+}
+
+impl fmt::Display for SubmitError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SubmitError::UnsupportedChain(chain) => write!(f, "Unsupported chain: {}", chain),
+            SubmitError::NetworkError(msg) => write!(f, "Network error: {}", msg),
+            SubmitError::Rejected(reason) => write!(f, "Transaction rejected: {}", reason),
+        }
+    }
+}
 
 /// Submit a transaction to Bitcoin network.
 pub async fn submit_bitcoin_tx(
     config: &RelayerConfig,
     tx: &RetryableTransaction,
-) -> Result<(), String> {
-    let client = Client::new();
+) -> Result<(), SubmitError> {
+    let _client = Client::new();
 
     // TODO: Implement actual Bitcoin transaction submission
     // This would involve creating and broadcasting a Bitcoin transaction
@@ -22,7 +45,7 @@ pub async fn submit_bitcoin_tx(
 
     // Simulate potential failure for testing
     if tx.attempt == 0 {
-        return Err("Simulated Bitcoin submission failure".to_string());
+        return Err(SubmitError::Rejected("Simulated Bitcoin submission failure".to_string()));
     }
 
     Ok(())
@@ -32,8 +55,8 @@ pub async fn submit_bitcoin_tx(
 pub async fn submit_ethereum_tx(
     config: &RelayerConfig,
     tx: &RetryableTransaction,
-) -> Result<(), String> {
-    let client = Client::new();
+) -> Result<(), SubmitError> {
+    let _client = Client::new();
 
     // TODO: Implement actual Ethereum transaction submission
     // This would involve calling Ethereum RPC to send a transaction
@@ -42,7 +65,7 @@ pub async fn submit_ethereum_tx(
 
     // Simulate potential failure
     if tx.attempt < 2 {
-        return Err("Simulated Ethereum submission failure".to_string());
+        return Err(SubmitError::Rejected("Simulated Ethereum submission failure".to_string()));
     }
 
     Ok(())
@@ -52,8 +75,8 @@ pub async fn submit_ethereum_tx(
 pub async fn submit_stellar_tx(
     config: &RelayerConfig,
     tx: &RetryableTransaction,
-) -> Result<(), String> {
-    let client = Client::new();
+) -> Result<(), SubmitError> {
+    let _client = Client::new();
 
     // TODO: Implement actual Stellar/Soroban transaction submission
     // This would involve invoking the Soroban contract
@@ -62,7 +85,7 @@ pub async fn submit_stellar_tx(
 
     // Simulate potential failure
     if tx.attempt == 0 {
-        return Err("Simulated Stellar submission failure".to_string());
+        return Err(SubmitError::Rejected("Simulated Stellar submission failure".to_string()));
     }
 
     Ok(())
@@ -72,11 +95,68 @@ pub async fn submit_stellar_tx(
 pub async fn submit_transaction(
     config: &RelayerConfig,
     tx: RetryableTransaction,
-) -> Result<(), String> {
+) -> Result<(), SubmitError> {
     match tx.chain.as_str() {
         "bitcoin" => submit_bitcoin_tx(config, &tx).await,
         "ethereum" => submit_ethereum_tx(config, &tx).await,
         "stellar" => submit_stellar_tx(config, &tx).await,
-        _ => Err(format!("Unsupported chain: {}", tx.chain)),
+        _ => Err(SubmitError::UnsupportedChain(tx.chain.clone())),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::RelayerConfig;
+    use crate::retry::RetryableTransaction;
+
+    fn test_config() -> RelayerConfig {
+        RelayerConfig {
+            relayer_name: "test".into(),
+            relayer_fee_bps: 10,
+            metrics_bind_addr: "0.0.0.0:9108".into(),
+            stellar_rpc_url: "https://soroban-testnet.stellar.org".into(),
+            contract_id: "test_contract".into(),
+            bitcoin_rpc_url: "http://localhost:8332".into(),
+            ethereum_rpc_url: "http://localhost:8545".into(),
+            poll_interval_secs: 15,
+            max_retries: 3,
+            stellar_start_ledger: 0,
+            max_retry_backoff_secs: 300,
+        }
+    }
+
+    fn test_tx(chain: &str, attempt: u32) -> RetryableTransaction {
+        RetryableTransaction {
+            id: "test-tx-001".into(),
+            chain: chain.to_string(),
+            tx_data: vec![],
+            attempt,
+            max_attempts: 10,
+            next_retry_at: std::time::SystemTime::now(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_unsupported_chain_returns_typed_error() {
+        let config = test_config();
+        let tx = test_tx("solana", 0);
+        let result = submit_transaction(&config, tx).await;
+        assert!(
+            matches!(result, Err(SubmitError::UnsupportedChain(ref c)) if c == "solana"),
+            "expected UnsupportedChain(\"solana\"), got {:?}", result
+        );
+    }
+
+    #[tokio::test]
+    async fn test_unsupported_chain_display() {
+        let err = SubmitError::UnsupportedChain("tron".into());
+        assert_eq!(err.to_string(), "Unsupported chain: tron");
+    }
+
+    #[tokio::test]
+    async fn test_rejected_display() {
+        let err = SubmitError::Rejected("insufficient funds".into());
+        assert_eq!(err.to_string(), "Transaction rejected: insufficient funds");
     }
 }

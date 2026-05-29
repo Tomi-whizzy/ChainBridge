@@ -11,6 +11,12 @@ pub struct RelayerConfig {
     pub ethereum_rpc_url: String,
     pub poll_interval_secs: u64,
     pub max_retries: u32,
+    /// Initial Soroban ledger sequence for Stellar event polling when no cursor is saved.
+    /// Set to 0 (default) to start from genesis, or to the current ledger to skip history.
+    pub stellar_start_ledger: u64,
+    /// Maximum exponential backoff delay in seconds between transaction retries.
+    /// The backoff sequence (2, 4, 8, …) is capped at this value. Default: 300.
+    pub max_retry_backoff_secs: u64,
 }
 
 impl RelayerConfig {
@@ -38,6 +44,14 @@ impl RelayerConfig {
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(3),
+            stellar_start_ledger: std::env::var("STELLAR_START_LEDGER")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0),
+            max_retry_backoff_secs: std::env::var("MAX_RETRY_BACKOFF_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(300),
         }
     }
 }
