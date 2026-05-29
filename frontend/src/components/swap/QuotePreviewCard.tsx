@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 import { Badge, Button, Card } from "@/components/ui";
+import { formatPercent, formatTokenAmount, formatTokenWithSymbol } from "@/lib/format";
 import type { QuotePreview } from "@/lib/quoteApi";
 
 interface QuotePreviewCardProps {
@@ -13,13 +15,31 @@ interface QuotePreviewCardProps {
   isStale: boolean;
   error: string | null;
   onRefresh: () => void;
+  quotedAt?: number | null;
 }
 
-function formatAmount(value: number, symbol: string) {
-  return `${value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 8,
-  })} ${symbol}`;
+function useRelativeTime(timestamp: number | null | undefined): string {
+  const [label, setLabel] = useState("just now");
+
+  useEffect(() => {
+    if (!timestamp) {
+      setLabel("just now");
+      return;
+    }
+
+    function update() {
+      const seconds = Math.floor((Date.now() - timestamp!) / 1000);
+      if (seconds < 10) setLabel("just now");
+      else if (seconds < 60) setLabel(`${seconds}s ago`);
+      else setLabel(`${Math.floor(seconds / 60)}m ago`);
+    }
+
+    update();
+    const id = setInterval(update, 5000);
+    return () => clearInterval(id);
+  }, [timestamp]);
+
+  return label;
 }
 
 function sumComponentsByName(
@@ -65,7 +85,9 @@ export function QuotePreviewCard({
   isStale,
   error,
   onRefresh,
+  quotedAt,
 }: QuotePreviewCardProps) {
+  const updatedLabel = useRelativeTime(quote ? (quotedAt ?? null) : null);
   const networkFees = quote ? sumComponentsByName(quote, ["network_fee"]) : [];
   const protocolFees = quote ? sumComponentsByName(quote, ["contract_fee", "relayer_fee"]) : [];
 
@@ -96,7 +118,13 @@ export function QuotePreviewCard({
       <div className="mb-3 flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-text-primary">Quote Preview</p>
-          <p className="text-xs text-text-muted">Expected output, rate, and fee breakdown</p>
+          {quote ? (
+            <p className={`text-xs ${isStale ? "text-amber-400" : "text-text-muted"}`}>
+              Updated {updatedLabel}
+            </p>
+          ) : (
+            <p className="text-xs text-text-muted">Expected output, rate, and fee breakdown</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {isStale && <Badge variant="warning">Stale Quote</Badge>}
@@ -106,6 +134,8 @@ export function QuotePreviewCard({
             icon={<RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />}
             onClick={onRefresh}
             disabled={isLoading}
+            aria-label="Refresh quote"
+            aria-keyshortcuts="r"
           >
             Refresh
           </Button>
@@ -129,11 +159,21 @@ export function QuotePreviewCard({
           <div className="rounded-xl border border-border bg-surface-overlay/40 p-3">
             <div className="flex items-center justify-between">
               <span className="text-text-muted">Gross receive</span>
-              <span className="font-semibold text-text-primary">{formatAmount(grossReceive, toAsset)}</span>
+              <span className="font-semibold text-text-primary">
+                {formatTokenWithSymbol(grossReceive, toAsset, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 8,
+                })}
+              </span>
             </div>
             <div className="mt-1 flex items-center justify-between">
               <span className="text-text-muted">Estimated net receive</span>
-              <span className="font-semibold text-emerald-400">{formatAmount(netReceive, toAsset)}</span>
+              <span className="font-semibold text-emerald-400">
+                {formatTokenWithSymbol(netReceive, toAsset, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 8,
+                })}
+              </span>
             </div>
           </div>
 
@@ -141,28 +181,42 @@ export function QuotePreviewCard({
             <div className="mb-2 flex items-center justify-between">
               <span className="text-text-muted">Rate</span>
               <span className="font-medium text-text-primary">
-                1 {fromAsset} ~= {quote.rateQuote.effective_rate.toFixed(8)} {toAsset}
+                {`1 ${fromAsset} ≈ ${formatTokenAmount(quote.rateQuote.effective_rate, { maximumFractionDigits: 8 })} ${toAsset}`}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-text-muted">Slippage estimate</span>
-              <span className="text-text-primary">{(quote.rateQuote.slippage_estimate * 100).toFixed(2)}%</span>
+              <span className="text-text-primary">
+                {formatPercent(quote.rateQuote.slippage_estimate, { fractionDigits: 2 })}
+              </span>
             </div>
           </div>
 
           <div className="rounded-xl border border-border bg-surface-overlay/40 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">Fees</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
+              Fees
+            </p>
             <div className="space-y-1 text-xs">
               {networkFees.map((fee, index) => (
-                <div key={`network-${index}`} className="flex items-center justify-between text-text-secondary">
+                <div
+                  key={`network-${index}`}
+                  className="flex items-center justify-between text-text-secondary"
+                >
                   <span>Network: {fee.asset}</span>
-                  <span>{fee.amount.toFixed(8)} {fee.asset}</span>
+                  <span>
+                    {formatTokenWithSymbol(fee.amount, fee.asset, { maximumFractionDigits: 8 })}
+                  </span>
                 </div>
               ))}
               {protocolFees.map((fee, index) => (
-                <div key={`protocol-${index}`} className="flex items-center justify-between text-text-secondary">
+                <div
+                  key={`protocol-${index}`}
+                  className="flex items-center justify-between text-text-secondary"
+                >
                   <span>Protocol: {fee.name.replace("_", " ")}</span>
-                  <span>{fee.amount.toFixed(8)} {fee.asset}</span>
+                  <span>
+                    {formatTokenWithSymbol(fee.amount, fee.asset, { maximumFractionDigits: 8 })}
+                  </span>
                 </div>
               ))}
             </div>
@@ -176,7 +230,8 @@ export function QuotePreviewCard({
 
           {unconvertedCount > 0 && (
             <p className="text-xs text-text-muted">
-              {unconvertedCount} fee component(s) could not be converted into {toAsset} for net estimation.
+              {unconvertedCount} fee component(s) could not be converted into {toAsset} for net
+              estimation.
             </p>
           )}
         </div>

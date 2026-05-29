@@ -1,10 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Card, Badge } from "@/components/ui";
-import { LineChart, BarChartWrapper, DonutChart } from "@/components/charts";
+import { Suspense, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { Card, Badge, Skeleton } from "@/components/ui";
 
 type VolumePeriod = "24h" | "7d" | "30d";
+
+const LineChart = dynamic(() => import("@/components/charts").then((m) => m.LineChart), {
+  loading: () => <Skeleton className="h-[220px] w-full rounded-xl" />,
+  ssr: false,
+});
+
+const BarChartWrapper = dynamic(
+  () => import("@/components/charts").then((m) => m.BarChartWrapper),
+  { loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />, ssr: false }
+);
+
+const DonutChart = dynamic(() => import("@/components/charts").then((m) => m.DonutChart), {
+  loading: () => <Skeleton className="h-[160px] w-[160px] rounded-full mx-auto" />,
+  ssr: false,
+});
 
 const RAW_DATA: Record<
   VolumePeriod,
@@ -33,6 +48,10 @@ const CHAIN_SLICES = [
   { label: "Bitcoin", value: 18, color: "#f97316" },
   { label: "Solana", value: 9, color: "#a855f7" },
 ];
+
+function ChartSkeleton({ height }: { height: number }) {
+  return <Skeleton className={`w-full rounded-xl`} style={{ height }} />;
+}
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<VolumePeriod>("7d");
@@ -77,7 +96,7 @@ export default function AnalyticsPage() {
             Swap volume and order activity across rolling time windows.
           </p>
         </div>
-        <Badge variant="info">Issues #169 · #168</Badge>
+        <Badge variant="info">Live Data</Badge>
       </div>
 
       {/* Period selector */}
@@ -106,31 +125,37 @@ export default function AnalyticsPage() {
         {/* Line chart – volume trend */}
         <Card className="p-6 lg:col-span-2">
           <p className="text-sm font-semibold text-text-primary mb-4">Volume Trend</p>
-          <LineChart
-            series={lineSeries}
-            height={220}
-            formatX={fmtX}
-            formatY={(v) => `$${v.toLocaleString()}`}
-          />
+          <Suspense fallback={<ChartSkeleton height={220} />}>
+            <LineChart
+              series={lineSeries}
+              height={220}
+              formatX={fmtX}
+              formatY={(v) => `$${v.toLocaleString()}`}
+            />
+          </Suspense>
         </Card>
 
         {/* Donut – chain distribution */}
         <Card className="p-6 flex flex-col items-center">
           <p className="text-sm font-semibold text-text-primary mb-4 self-start">Chain Mix</p>
-          <DonutChart
-            slices={CHAIN_SLICES}
-            size={160}
-            thickness={32}
-            centerLabel="100%"
-            centerSub="volume"
-          />
+          <Suspense fallback={<Skeleton className="h-[160px] w-[160px] rounded-full" />}>
+            <DonutChart
+              slices={CHAIN_SLICES}
+              size={160}
+              thickness={32}
+              centerLabel="100%"
+              centerSub="volume"
+            />
+          </Suspense>
         </Card>
       </div>
 
       {/* Bar chart – order count */}
       <Card className="p-6">
         <p className="text-sm font-semibold text-text-primary mb-4">Order Count</p>
-        <BarChartWrapper data={barData} height={200} formatValue={(v) => `${v} orders`} />
+        <Suspense fallback={<ChartSkeleton height={200} />}>
+          <BarChartWrapper data={barData} height={200} formatValue={(v) => `${v} orders`} />
+        </Suspense>
       </Card>
     </div>
   );

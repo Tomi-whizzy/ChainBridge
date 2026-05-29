@@ -3,10 +3,12 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "@/styles/globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/Navbar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { EnvValidationWrapper } from "@/components/EnvValidationWrapper";
 import { cn } from "@/lib/utils";
+import { AppLayoutErrorBoundary } from "@/components/layout/AppLayoutErrorBoundary";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -86,24 +88,31 @@ export default function RootLayout({
         )}
       >
         {/* Skip-to-main link — visible on keyboard focus, hidden otherwise */}
-        <a
-          href="#main-content"
-          className="skip-to-main"
-        >
+        <a href="#main-content" className="skip-to-main">
           Skip to main content
         </a>
-        <EnvValidationWrapper>
-          <Providers>
-            <ServiceWorkerRegistrar />
-            <div className="relative flex min-h-screen flex-col">
-              <Navbar />
-              <main id="main-content" className="flex-1" tabIndex={-1}>
-                {children}
-              </main>
-              <Footer />
-            </div>
-          </Providers>
-        </EnvValidationWrapper>
+        <AppLayoutErrorBoundary>
+          <EnvValidationWrapper>
+            <Providers>
+              <ServiceWorkerRegistrar />
+              <div className="flex min-h-screen">
+                {/* Desktop Sidebar */}
+                <Sidebar />
+
+                {/* Main Shell */}
+                <div className="relative flex flex-1 flex-col lg:pl-64">
+                  <Navbar />
+                  <main id="main-content" className="flex-1" tabIndex={-1}>
+                    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                      {children}
+                    </div>
+                  </main>
+                  <Footer />
+                </div>
+              </div>
+            </Providers>
+          </EnvValidationWrapper>
+        </AppLayoutErrorBoundary>
       </body>
     </html>
   );

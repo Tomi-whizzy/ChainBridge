@@ -8,6 +8,7 @@ import { truncateAddress, formatAmount } from "@/lib/utils";
 import { ChainType } from "@/types/wallet";
 import config from "@/lib/config";
 import { WalletConnectionModal } from "@/components/wallet/WalletConnectionModal";
+import { useUnifiedWallet } from "@/components/wallet/UnifiedWalletProvider";
 
 function formatNetworkLabel(network: string | null | undefined): string {
   if (!network) return "Network unavailable";
@@ -43,21 +44,25 @@ export function WalletConnect() {
     connectByChain,
     disconnectActiveWallet,
     balance,
+    error,
   } = useUnifiedWallet();
   const [isOpen, setIsOpen] = useState(false);
   const toast = useToast();
 
   const networkLabel = formatNetworkLabel(network);
   const expectedNetworkLabel = formatNetworkLabel(config.stellar.network);
-  const expectedEthereumLabel = config.ethereum.network === "mainnet" ? "Ethereum Mainnet" : "Sepolia";
+  const expectedEthereumLabel =
+    config.ethereum.network === "mainnet" ? "Ethereum Mainnet" : "Sepolia";
 
   const handleConnect = async (targetChain: ChainType) => {
     try {
       await connectByChain(targetChain);
 
-      if (targetChain === "stellar" && isUnsupportedNetwork) {
+      if (isUnsupportedNetwork) {
         toast.warning(
-          targetChain === "stellar" ? "Unsupported Stellar network" : "Unsupported Ethereum network",
+          targetChain === "stellar"
+            ? "Unsupported Stellar network"
+            : "Unsupported Ethereum network",
           targetChain === "stellar"
             ? `Switch Freighter to ${expectedNetworkLabel} to continue with ChainBridge.`
             : `Switch MetaMask to ${expectedEthereumLabel} to continue with ChainBridge.`
@@ -74,10 +79,7 @@ export function WalletConnect() {
       setIsOpen(false);
     } catch (e) {
       console.error("Connection failed", e);
-      toast.error(
-        "Wallet connection failed",
-        e instanceof Error ? e.message : "Please try again."
-      );
+      toast.error("Wallet connection failed", e instanceof Error ? e.message : "Please try again.");
     }
   };
 
@@ -95,7 +97,7 @@ export function WalletConnect() {
             {activeChain === "stellar" && (
               <span className="text-[10px] text-text-muted">Network: {networkLabel}</span>
             )}
-            {chain === "ethereum" && (
+            {activeChain === "ethereum" && (
               <span className="text-[10px] text-text-muted">Network: {networkLabel}</span>
             )}
           </div>
@@ -125,7 +127,7 @@ export function WalletConnect() {
             </p>
           </div>
         )}
-        {chain === "ethereum" && isUnsupportedNetwork && (
+        {activeChain === "ethereum" && isUnsupportedNetwork && (
           <div className="flex max-w-xs items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-left text-xs text-amber-200">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <p>
@@ -155,6 +157,11 @@ export function WalletConnect() {
         isConnecting={isConnecting}
         onConnect={handleConnect}
       />
+      {error && (
+        <p className="mt-2 max-w-xs text-xs text-red-400" role="alert">
+          {error}
+        </p>
+      )}
     </>
   );
 }

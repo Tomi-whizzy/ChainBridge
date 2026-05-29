@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Shield,
   BarChart3,
@@ -12,14 +13,8 @@ import {
   RefreshCw,
   LogOut,
 } from "lucide-react";
-import { Badge, Button, Spinner, Card } from "@/components/ui";
+import { Badge, Breadcrumb, Button, Card, Skeleton, StatCardSkeleton } from "@/components/ui";
 import { StatCard } from "@/components/admin/StatCard";
-import { BarChart } from "@/components/admin/BarChart";
-import { HTLCMonitor } from "@/components/admin/HTLCMonitor";
-import { ChainHealthPanel } from "@/components/admin/ChainHealthPanel";
-import { UserActivityPanel } from "@/components/admin/UserActivityPanel";
-import { AlertsPanel } from "@/components/admin/AlertsPanel";
-import { DisputesPanel } from "@/components/admin/DisputesPanel";
 import { AdminLoginGate } from "@/components/admin/AdminLoginGate";
 import {
   useAdminStats,
@@ -31,6 +26,37 @@ import {
   useDisputes,
 } from "@/hooks/useAdminStats";
 import { getAdminApiKey, clearAdminApiKey } from "@/lib/adminApi";
+import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
+
+const BarChart = dynamic(() => import("@/components/admin/BarChart").then((m) => m.BarChart), {
+  loading: () => <Skeleton className="h-[220px] w-full rounded-xl" />,
+  ssr: false,
+});
+
+const HTLCMonitor = dynamic(
+  () => import("@/components/admin/HTLCMonitor").then((m) => m.HTLCMonitor),
+  { loading: () => <Skeleton className="h-48 w-full rounded-xl" />, ssr: false }
+);
+
+const ChainHealthPanel = dynamic(
+  () => import("@/components/admin/ChainHealthPanel").then((m) => m.ChainHealthPanel),
+  { loading: () => <Skeleton className="h-48 w-full rounded-xl" />, ssr: false }
+);
+
+const UserActivityPanel = dynamic(
+  () => import("@/components/admin/UserActivityPanel").then((m) => m.UserActivityPanel),
+  { loading: () => <Skeleton className="h-48 w-full rounded-xl" />, ssr: false }
+);
+
+const AlertsPanel = dynamic(
+  () => import("@/components/admin/AlertsPanel").then((m) => m.AlertsPanel),
+  { loading: () => <Skeleton className="h-48 w-full rounded-xl" />, ssr: false }
+);
+
+const DisputesPanel = dynamic(
+  () => import("@/components/admin/DisputesPanel").then((m) => m.DisputesPanel),
+  { loading: () => <Skeleton className="h-48 w-full rounded-xl" />, ssr: false }
+);
 
 type VolumePeriod = "1h" | "24h" | "7d" | "30d";
 
@@ -38,7 +64,6 @@ export default function AdminDashboardPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [volumePeriod, setVolumePeriod] = useState<VolumePeriod>("24h");
 
-  // Check if the user already has a stored admin key
   useEffect(() => {
     if (getAdminApiKey()) setAuthenticated(true);
   }, []);
@@ -73,15 +98,19 @@ function Dashboard({
   const stats = useAdminStats();
   const volume = useAdminVolume(volumePeriod);
   const htlcs = useActiveHTLCs();
+  const breadcrumbs = useBreadcrumbs();
   const chains = useChainHealth();
   const userMetrics = useUserMetrics();
   const alerts = useAlerts();
   const disputes = useDisputes();
 
-  const allLoading = stats.loading && volume.loading;
-
   return (
     <div className="container mx-auto max-w-7xl px-4 py-10 animate-fade-in">
+      {/* Breadcrumb Navigation */}
+      <div className="mb-6">
+        <Breadcrumb items={breadcrumbs} />
+      </div>
+      
       {/* Header */}
       <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -116,61 +145,72 @@ function Dashboard({
         </div>
       </div>
 
-      {allLoading && (
-        <div className="flex items-center justify-center py-20">
-          <Spinner className="h-8 w-8" />
-        </div>
-      )}
-
       {/* Protocol Overview KPIs */}
-      {stats.data && (
-        <section className="mb-8">
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-            <StatCard
-              label="Total Swaps"
-              value={stats.data.swaps.total}
-              icon={ArrowRightLeft}
-              accent="brand"
-            />
-            <StatCard
-              label="Executed"
-              value={stats.data.swaps.executed}
-              icon={Layers}
-              accent="emerald"
-            />
-            <StatCard
-              label="Open Orders"
-              value={stats.data.orders.open}
-              icon={BarChart3}
-              accent="indigo"
-            />
-            <StatCard
-              label="Active HTLCs"
-              value={stats.data.htlcs.active}
-              icon={Activity}
-              accent="amber"
-            />
-            <StatCard
-              label="Open Disputes"
-              value={stats.data.disputes.open}
-              icon={Bell}
-              accent="red"
-            />
-            <StatCard
-              label="Volume (24h)"
-              value={stats.data.volume.last_24h.toLocaleString()}
-              icon={BarChart3}
-              accent="brand"
-            />
-            <StatCard
-              label="Unique Users"
-              value={stats.data.users.unique_creators}
-              icon={Users}
-              accent="indigo"
-            />
-          </div>
-        </section>
-      )}
+      <section className="mb-8">
+        <Suspense
+          fallback={
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <StatCardSkeleton key={i} />
+              ))}
+            </div>
+          }
+        >
+          {stats.data && (
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+              <StatCard
+                label="Total Swaps"
+                value={stats.data.swaps.total}
+                icon={ArrowRightLeft}
+                accent="brand"
+              />
+              <StatCard
+                label="Executed"
+                value={stats.data.swaps.executed}
+                icon={Layers}
+                accent="emerald"
+              />
+              <StatCard
+                label="Open Orders"
+                value={stats.data.orders.open}
+                icon={BarChart3}
+                accent="indigo"
+              />
+              <StatCard
+                label="Active HTLCs"
+                value={stats.data.htlcs.active}
+                icon={Activity}
+                accent="amber"
+              />
+              <StatCard
+                label="Open Disputes"
+                value={stats.data.disputes.open}
+                icon={Bell}
+                accent="red"
+              />
+              <StatCard
+                label="Volume (24h)"
+                value={stats.data.volume.last_24h.toLocaleString()}
+                icon={BarChart3}
+                accent="brand"
+              />
+              <StatCard
+                label="Unique Users"
+                value={stats.data.users.unique_creators}
+                icon={Users}
+                accent="indigo"
+              />
+            </div>
+          )}
+          {stats.loading && (
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <StatCardSkeleton key={i} />
+              ))}
+            </div>
+          )}
+        </Suspense>
+      </section>
 
       {/* Swap Volume Chart */}
       <section className="mb-8">
@@ -193,22 +233,20 @@ function Dashboard({
               ))}
             </div>
           </div>
-
-          {volume.loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : volume.data ? (
-            <BarChart
-              buckets={volume.data.buckets}
-              height={220}
-              formatX={(ts) =>
-                volumePeriod === "1h" || volumePeriod === "24h"
-                  ? new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                  : new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" })
-              }
-            />
-          ) : null}
+          <Suspense fallback={<Skeleton className="h-[220px] w-full rounded-xl" />}>
+            {volume.data && (
+              <BarChart
+                buckets={volume.data.buckets}
+                height={220}
+                formatX={(ts) =>
+                  volumePeriod === "1h" || volumePeriod === "24h"
+                    ? new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    : new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" })
+                }
+              />
+            )}
+            {volume.loading && <Skeleton className="h-[220px] w-full rounded-xl" />}
+          </Suspense>
           {volume.error && <p className="text-sm text-red-400 py-4 text-center">{volume.error}</p>}
         </Card>
       </section>
@@ -216,24 +254,20 @@ function Dashboard({
       {/* Two-column: HTLCs + Chain Health */}
       <section className="mb-8 grid gap-6 lg:grid-cols-2">
         <Card variant="raised" className="p-6">
-          {htlcs.loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : htlcs.data ? (
-            <HTLCMonitor htlcs={htlcs.data.htlcs} activeCount={htlcs.data.active_count} />
-          ) : null}
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+            {htlcs.data && (
+              <HTLCMonitor htlcs={htlcs.data.htlcs} activeCount={htlcs.data.active_count} />
+            )}
+            {htlcs.loading && <Skeleton className="h-48 w-full rounded-xl" />}
+          </Suspense>
           {htlcs.error && <p className="text-sm text-red-400 py-4 text-center">{htlcs.error}</p>}
         </Card>
 
         <Card variant="raised" className="p-6">
-          {chains.loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : chains.data ? (
-            <ChainHealthPanel chains={chains.data.chains} />
-          ) : null}
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+            {chains.data && <ChainHealthPanel chains={chains.data.chains} />}
+            {chains.loading && <Skeleton className="h-48 w-full rounded-xl" />}
+          </Suspense>
           {chains.error && <p className="text-sm text-red-400 py-4 text-center">{chains.error}</p>}
         </Card>
       </section>
@@ -241,13 +275,10 @@ function Dashboard({
       {/* User Activity */}
       <section className="mb-8">
         <Card variant="raised" className="p-6">
-          {userMetrics.loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : userMetrics.data ? (
-            <UserActivityPanel metrics={userMetrics.data} />
-          ) : null}
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+            {userMetrics.data && <UserActivityPanel metrics={userMetrics.data} />}
+            {userMetrics.loading && <Skeleton className="h-48 w-full rounded-xl" />}
+          </Suspense>
           {userMetrics.error && (
             <p className="text-sm text-red-400 py-4 text-center">{userMetrics.error}</p>
           )}
@@ -257,18 +288,17 @@ function Dashboard({
       {/* Alert Configuration */}
       <section className="mb-8">
         <Card variant="raised" className="p-6">
-          {alerts.loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : (
-            <AlertsPanel
-              alerts={alerts.data ?? []}
-              onAdd={alerts.add}
-              onEdit={alerts.edit}
-              onDelete={alerts.remove}
-            />
-          )}
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+            {!alerts.loading && (
+              <AlertsPanel
+                alerts={alerts.data ?? []}
+                onAdd={alerts.add}
+                onEdit={alerts.edit}
+                onDelete={alerts.remove}
+              />
+            )}
+            {alerts.loading && <Skeleton className="h-48 w-full rounded-xl" />}
+          </Suspense>
           {alerts.error && <p className="text-sm text-red-400 py-4 text-center">{alerts.error}</p>}
         </Card>
       </section>
@@ -276,18 +306,19 @@ function Dashboard({
       {/* Dispute Review */}
       <section className="mb-8">
         <Card variant="raised" className="p-6">
-          {disputes.disputes.loading || disputes.stats.loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : (
-            <DisputesPanel
-              disputes={disputes.disputes.data ?? []}
-              stats={disputes.stats.data}
-              onReview={disputes.startReview}
-              onResolve={disputes.resolve}
-            />
-          )}
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
+            {!disputes.disputes.loading && !disputes.stats.loading && (
+              <DisputesPanel
+                disputes={disputes.disputes.data ?? []}
+                stats={disputes.stats.data}
+                onReview={disputes.startReview}
+                onResolve={disputes.resolve}
+              />
+            )}
+            {(disputes.disputes.loading || disputes.stats.loading) && (
+              <Skeleton className="h-48 w-full rounded-xl" />
+            )}
+          </Suspense>
           {(disputes.disputes.error || disputes.stats.error) && (
             <p className="text-sm text-red-400 py-4 text-center">
               {disputes.disputes.error ?? disputes.stats.error}

@@ -1,6 +1,8 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { ZodSchema } from "zod";
 import config from "@/lib/config";
 import type { ApiErrorShape } from "@/types/api";
+import { validateApiResponse } from "./validation";
 
 export class ApiClientError extends Error implements ApiErrorShape {
   status: number;
@@ -100,14 +102,41 @@ function mergeHeaders(
   };
 }
 
+export const DEFAULT_API_TIMEOUT_MS = 30_000;
+
+export interface ApiRetryConfig {
+  maxRetries: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+  backoffMultiplier: number;
+}
+
+export const DEFAULT_API_RETRY_CONFIG: ApiRetryConfig = {
+  maxRetries: 0,
+  initialDelayMs: 500,
+  maxDelayMs: 5_000,
+  backoffMultiplier: 2,
+};
+
 export interface ApiClientOptions {
   basePath: string;
   getHeaders?: () => Record<string, string> | undefined;
+  timeoutMs?: number;
+  retry?: Partial<ApiRetryConfig>;
+  enableValidation?: boolean;
 }
 
-export function createApiClient({ basePath, getHeaders }: ApiClientOptions) {
+export function createApiClient({
+  basePath,
+  getHeaders,
+  timeoutMs = DEFAULT_API_TIMEOUT_MS,
+  retry,
+  enableValidation = true,
+}: ApiClientOptions) {
+  const retryConfig: ApiRetryConfig = { ...DEFAULT_API_RETRY_CONFIG, ...retry };
   const instance = axios.create({
     baseURL: `${config.api.url}/api/v1${basePath}`,
+    timeout: timeoutMs,
     headers: {
       Accept: "application/json",
     },
@@ -125,16 +154,37 @@ export function createApiClient({ basePath, getHeaders }: ApiClientOptions) {
 
   return {
     instance,
-    get: async <T>(url: string = "/", request?: AxiosRequestConfig) => {
+    retryConfig,
+    enableValidation,
+    get: async <T>(url: string = "/", request?: AxiosRequestConfig, schema?: ZodSchema<T>) => {
       const { data } = await instance.get<T>(url, request);
+      if (enableValidation && schema) {
+        return validateApiResponse(data, schema, `${basePath}${url}`);
+      }
       return data;
     },
-    post: async <T>(url: string, body?: unknown, request?: AxiosRequestConfig) => {
+    post: async <T>(
+      url: string,
+      body?: unknown,
+      request?: AxiosRequestConfig,
+      schema?: ZodSchema<T>
+    ) => {
       const { data } = await instance.post<T>(url, body, request);
+      if (enableValidation && schema) {
+        return validateApiResponse(data, schema, `${basePath}${url}`);
+      }
       return data;
     },
-    patch: async <T>(url: string, body?: unknown, request?: AxiosRequestConfig) => {
+    patch: async <T>(
+      url: string,
+      body?: unknown,
+      request?: AxiosRequestConfig,
+      schema?: ZodSchema<T>
+    ) => {
       const { data } = await instance.patch<T>(url, body, request);
+      if (enableValidation && schema) {
+        return validateApiResponse(data, schema, `${basePath}${url}`);
+      }
       return data;
     },
     delete: async (url: string, request?: AxiosRequestConfig) => {

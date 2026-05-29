@@ -8,6 +8,8 @@ const EXPECTED_ETH_CHAIN_ID = config.ethereum.network === "mainnet" ? 1 : 111551
 
 let ethereumAccountsListener: ((accounts: string[]) => void) | null = null;
 let ethereumChainListener: ((chainIdHex: string) => void) | null = null;
+let ethereumDisconnectListener: ((info: { reason: string }) => void) | null = null;
+let unisatAccountsListener: ((accounts: string[]) => void) | null = null;
 
 function detachEthereumListeners() {
   if (typeof window === "undefined" || !window.ethereum) return;
@@ -18,6 +20,18 @@ function detachEthereumListeners() {
   if (ethereumChainListener) {
     window.ethereum.removeListener?.("chainChanged", ethereumChainListener);
     ethereumChainListener = null;
+  }
+  if (ethereumDisconnectListener) {
+    window.ethereum.removeListener?.("disconnect", ethereumDisconnectListener);
+    ethereumDisconnectListener = null;
+  }
+}
+
+function detachUnisatListeners() {
+  if (typeof window === "undefined" || !window.unisat) return;
+  if (unisatAccountsListener) {
+    window.unisat.removeListener?.("accountsChanged", unisatAccountsListener);
+    unisatAccountsListener = null;
   }
 }
 
@@ -41,6 +55,9 @@ export const useWalletStore = create<WalletStore>()(
           if (chain === "ethereum") {
             detachEthereumListeners();
           }
+          if (chain === "bitcoin") {
+            detachUnisatListeners();
+          }
 
           const adapter = getAdapter(chain);
           const { address, publicKey, network, walletName, isUnsupportedNetwork } =
@@ -61,11 +78,19 @@ export const useWalletStore = create<WalletStore>()(
 
           if (chain === "ethereum" && typeof window !== "undefined" && window.ethereum) {
             ethereumAccountsListener = (accounts: string[]) => {
+              const currentState = useWalletStore.getState();
               const nextAddress = accounts[0] ?? null;
+
               if (!nextAddress) {
                 void useWalletStore.getState().disconnect();
                 return;
               }
+
+              if (currentState.address && currentState.address !== nextAddress) {
+                void useWalletStore.getState().disconnect();
+                return;
+              }
+
               set({
                 address: nextAddress,
                 publicKey: nextAddress,
@@ -86,8 +111,43 @@ export const useWalletStore = create<WalletStore>()(
               });
             };
 
+            ethereumDisconnectListener = (info: { reason: string }) => {
+              void useWalletStore.getState().disconnect();
+            };
+
             window.ethereum.on?.("accountsChanged", ethereumAccountsListener);
             window.ethereum.on?.("chainChanged", ethereumChainListener);
+            window.ethereum.on?.("disconnect", ethereumDisconnectListener);
+          }
+
+          if (chain === "bitcoin" && typeof window !== "undefined" && window.unisat) {
+            unisatAccountsListener = (accounts: string[]) => {
+              const currentState = useWalletStore.getState();
+              const nextAddress = accounts[0] ?? null;
+
+              if (!nextAddress) {
+                void useWalletStore.getState().disconnect();
+                return;
+              }
+
+              if (currentState.address && currentState.address !== nextAddress) {
+                void useWalletStore.getState().disconnect();
+                return;
+              }
+
+              set({
+                address: nextAddress,
+                publicKey: nextAddress,
+              });
+              void adapter
+                .getBalance(nextAddress)
+                .then((nextBalance) => set({ balance: nextBalance }))
+                .catch(() => {
+                  // No-op to avoid forcing disconnect on transient RPC failures.
+                });
+            };
+
+            window.unisat.on?.("accountsChanged", unisatAccountsListener);
           }
         } catch (error: any) {
           set({
@@ -103,6 +163,9 @@ export const useWalletStore = create<WalletStore>()(
         if (chain) {
           if (chain === "ethereum") {
             detachEthereumListeners();
+          }
+          if (chain === "bitcoin") {
+            detachUnisatListeners();
           }
           await getAdapter(chain).disconnect();
         }
