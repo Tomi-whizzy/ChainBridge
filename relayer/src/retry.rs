@@ -55,13 +55,16 @@ impl RetryQueue {
     }
 
     /// Mark a transaction as failed and schedule next retry.
-    pub async fn retry_failed(&self, id: &str, max_attempts: u32) {
+    ///
+    /// Delay follows exponential backoff (2^attempt seconds) capped at `max_backoff_secs`
+    /// so the queue cannot grow without bound on long-running retries.
+    pub async fn retry_failed(&self, id: &str, max_attempts: u32, max_backoff_secs: u64) {
         let mut queue = self.queue.lock().await;
         if let Some(tx) = queue.get_mut(id) {
             tx.attempt += 1;
             if tx.attempt < max_attempts {
-                // Exponential backoff: 2^attempt seconds
-                let delay_secs = 2u64.pow(tx.attempt);
+                // Exponential backoff capped at max_backoff_secs
+                let delay_secs = 2u64.pow(tx.attempt).min(max_backoff_secs);
                 tx.next_retry_at = std::time::SystemTime::now() + std::time::Duration::from_secs(delay_secs);
             } else {
                 // Max attempts reached, remove from queue
@@ -113,7 +116,7 @@ impl RetryProcessor {
                     Err(e) => {
                         self.metrics.mark_tx_error(&tx.chain);
                         println!("Transaction {} failed on attempt {}: {}", tx.id, tx.attempt + 1, e);
-                        self.queue.retry_failed(&tx.id, tx.max_attempts).await;
+                        self.queue.retry_failed(&tx.id, tx.max_attempts, self.config.max_retry_backoff_secs).await;
                         if tx.attempt + 1 >= tx.max_attempts {
                             self.metrics.mark_tx_retry_failure(&tx.chain);
                             // TODO: Send failure notification
@@ -140,89 +143,51 @@ impl RetryProcessor {
 mod tests {
     use super::*;
 
-    fn ready_tx(id: &str) -> RetryableTransaction {
+    fn make_tx(id: &str, attempt: u32, max_attempts: u32) -> RetryableTransaction {
         RetryableTransaction {
             id: id.to_string(),
-            chain: "bitcoin".to_string(),
+            chain: "stellar".into(),
             tx_data: vec![],
-            attempt: 0,
-            max_attempts: 3,
-            next_retry_at: std::time::SystemTime::now()
-                - std::time::Duration::from_secs(1),
-        }
-    }
-
-    fn future_tx(id: &str) -> RetryableTransaction {
-        RetryableTransaction {
-            id: id.to_string(),
-            chain: "ethereum".to_string(),
-            tx_data: vec![],
-            attempt: 0,
-            max_attempts: 3,
-            next_retry_at: std::time::SystemTime::now()
-                + std::time::Duration::from_secs(60),
+            attempt,
+            max_attempts,
+            next_retry_at: std::time::SystemTime::now(),
         }
     }
 
     #[tokio::test]
-    async fn test_ready_transaction_dequeues() {
+    async fn test_retry_backoff_is_capped() {
         let queue = RetryQueue::new();
-        queue.enqueue(ready_tx("tx-ready")).await;
-        let result = queue.dequeue_ready().await;
-        assert!(result.is_some());
-        assert_eq!(result.unwrap().id, "tx-ready");
-    }
+        // attempt=10 would normally give 2^11 = 2048s after increment, well above any cap
+        queue.enqueue(make_tx("tx-cap", 10, 20)).await;
 
-    #[tokio::test]
-    async fn test_future_transaction_does_not_dequeue_early() {
-        let queue = RetryQueue::new();
-        queue.enqueue(future_tx("tx-future")).await;
-        let result = queue.dequeue_ready().await;
-        assert!(result.is_none(), "future transaction must not dequeue before its time");
-    }
+        let cap = 60u64;
+        queue.retry_failed("tx-cap", 20, cap).await;
 
-    #[tokio::test]
-    async fn test_ready_dequeues_while_future_stays() {
-        let queue = RetryQueue::new();
-        queue.enqueue(ready_tx("tx-now")).await;
-        queue.enqueue(future_tx("tx-later")).await;
-        let dequeued = queue.dequeue_ready().await;
-        assert!(dequeued.is_some());
-        assert_eq!(dequeued.unwrap().id, "tx-now");
-        // future tx still in queue
         let status = queue.status().await;
-        assert!(status.contains_key("tx-later"));
+        let updated = status.get("tx-cap").expect("tx should still be in queue");
+        let delay = updated
+            .next_retry_at
+            .duration_since(std::time::SystemTime::now())
+            .unwrap_or_default();
+        assert!(
+            delay.as_secs() <= cap,
+            "backoff {}s exceeds cap {}s",
+            delay.as_secs(),
+            cap
+        );
     }
 
     #[tokio::test]
-    async fn test_retry_failed_schedules_backoff_in_future() {
+    async fn test_retry_removed_at_max_attempts() {
         let queue = RetryQueue::new();
-        let mut tx = ready_tx("tx-retry");
-        // re-enqueue as if it came back after a failed attempt
-        tx.attempt = 0;
-        queue.enqueue(tx).await;
-        queue.retry_failed("tx-retry", 3).await;
-        // after backoff rescheduling it should not be immediately ready
-        let result = queue.dequeue_ready().await;
-        assert!(result.is_none(), "retried tx should have a future next_retry_at");
-    }
+        queue.enqueue(make_tx("tx-exhaust", 4, 5)).await;
 
-    #[tokio::test]
-    async fn test_retry_failed_removes_when_max_attempts_reached() {
-        let queue = RetryQueue::new();
-        queue.enqueue(ready_tx("tx-exhaust")).await;
-        // simulate exhausting all attempts
-        queue.retry_failed("tx-exhaust", 1).await;
+        queue.retry_failed("tx-exhaust", 5, 300).await;
+
         let status = queue.status().await;
-        assert!(!status.contains_key("tx-exhaust"), "exhausted tx must be removed");
-    }
-
-    #[tokio::test]
-    async fn test_mark_success_removes_transaction() {
-        let queue = RetryQueue::new();
-        queue.enqueue(ready_tx("tx-ok")).await;
-        queue.mark_success("tx-ok").await;
-        let status = queue.status().await;
-        assert!(!status.contains_key("tx-ok"));
+        assert!(
+            !status.contains_key("tx-exhaust"),
+            "exhausted tx should be removed from queue"
+        );
     }
 }

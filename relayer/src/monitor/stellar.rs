@@ -108,12 +108,21 @@ async fn poll_events(
 ) -> Result<(Option<String>, usize, u64), Box<dyn std::error::Error + Send + Sync>> {
     let client = reqwest::Client::new();
 
+    // When a cursor exists it drives pagination; startLedger is only needed on
+    // the very first poll. Use the configured value so operators can skip
+    // historical events on startup by setting STELLAR_START_LEDGER.
+    let start_ledger = if cursor.is_none() {
+        config.stellar_start_ledger
+    } else {
+        0
+    };
+
     let mut body = serde_json::json!({
         "jsonrpc": "2.0",
         "id": 1,
         "method": "getEvents",
         "params": {
-            "startLedger": 0,
+            "startLedger": start_ledger,
             "filters": [{
                 "contractIds": [config.contract_id],
             }],
