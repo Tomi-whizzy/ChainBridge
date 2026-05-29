@@ -9,7 +9,7 @@ import { useOrderBookStore, useMockOrders } from "@/hooks/useOrderBook";
 import { useTransactionStore } from "@/hooks/useTransactions";
 import { Order, OrderStatus, TransactionStatus } from "@/types";
 import { Badge, Button } from "@/components/ui";
-import { ShoppingBag, TrendingUp, Info, Plus } from "lucide-react";
+import { ShoppingBag, TrendingUp, Info, Plus, ExternalLink, RefreshCw } from "lucide-react";
 import {
   buildCompletedLifecycle,
   buildTransactionLifecycle,
@@ -145,9 +145,11 @@ export default function MarketplacePage() {
               My Orders
             </Button>
           </Link>
-          <Button variant="primary" className="h-12 px-6 shadow-glow-md" icon={<Plus size={18} />}>
-            Create Order
-          </Button>
+          <Link href="/orders/new">
+            <Button variant="primary" className="h-12 px-6 shadow-glow-md" icon={<Plus size={18} />}>
+              Create Order
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -190,13 +192,14 @@ export default function MarketplacePage() {
                   Taking an order creates an atomic swap. You'll lock funds on the source chain
                   first, then the maker will lock on the destination.
                 </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 px-0 text-brand-500 hover:bg-transparent h-auto"
+                <Link
+                  href="/protocol#htlc"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-500 hover:underline"
+                  aria-label="Learn more about Hash Timelock Contracts on the protocol page"
                 >
-                  Learn more about HTLCs →
-                </Button>
+                  Learn more about HTLCs
+                  <ExternalLink size={12} aria-hidden="true" />
+                </Link>
               </div>
             </div>
           </div>
