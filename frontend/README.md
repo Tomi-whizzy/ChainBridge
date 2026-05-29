@@ -24,11 +24,19 @@ Next.js 14 frontend for the ChainBridge cross-chain atomic swap protocol.
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
 ```
+
+**Troubleshooting:**
+- If you encounter `ENOSPC` errors, increase your system's file watcher limit:
+  ```bash
+  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -p
+  ```
+- If `npm install` fails, try clearing the cache:
+  ```bash
+  rm -rf node_modules package-lock.json
+  npm install
+  ```
 
 ### 2. Environment Setup
 
@@ -46,6 +54,11 @@ Environment variables:
 | `NEXT_PUBLIC_STELLAR_NETWORK` | Stellar network (testnet/mainnet) | `testnet`               |
 | `NEXT_PUBLIC_BITCOIN_NETWORK` | Bitcoin network                   | `testnet`               |
 
+**Troubleshooting:**
+- Ensure `.env.local` is added to `.gitignore` (it should be by default)
+- If environment variables aren't loading, restart the dev server after making changes
+- Verify variable names match exactly (case-sensitive, no spaces around `=`)
+
 ### 3. Development Server
 
 ```bash
@@ -54,12 +67,32 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+**Troubleshooting:**
+- If port 3000 is in use, Next.js will automatically try the next available port (3001, 3002, etc.)
+- If you see "Module not found" errors, try:
+  ```bash
+  rm -rf .next
+  npm run dev
+  ```
+- For TypeScript errors during development, run:
+  ```bash
+  npm run type-check
+  ```
+
 ### 4. Production Build
 
 ```bash
 npm run build
 npm run start
 ```
+
+**Troubleshooting:**
+- If the build fails with TypeScript errors, run `npm run type-check` to identify issues
+- For build performance issues, increase Node.js memory:
+  ```bash
+  NODE_OPTIONS=--max-old-space-size=4096 npm run build
+  ```
+- If static assets are missing, ensure the `public/` directory exists and contains required files
 
 ## Project Structure
 
@@ -90,13 +123,28 @@ frontend/
 
 ## Scripts
 
-| Script           | Description              |
-| ---------------- | ------------------------ |
-| `npm run dev`    | Start development server |
-| `npm run build`  | Build for production     |
-| `npm run start`  | Start production server  |
-| `npm run lint`   | Run ESLint               |
-| `npm run format` | Format with Prettier     |
+| Script                | Description                           |
+| --------------------- | ------------------------------------- |
+| `npm run dev`         | Start development server              |
+| `npm run build`       | Build for production                  |
+| `npm run start`       | Start production server               |
+| `npm run lint`        | Run ESLint                            |
+| `npm run format`      | Format with Prettier                  |
+| `npm run format:check` | Check formatting without modifying    |
+| `npm run type-check`  | Run TypeScript type checking          |
+
+**Common Workflows:**
+
+```bash
+# Before committing changes
+npm run lint && npm run format:check && npm run type-check
+
+# Fix formatting issues
+npm run format
+
+# Check for type errors
+npm run type-check
+```
 
 ## Code Quality
 
@@ -136,18 +184,28 @@ npm run format:check
 npm run type-check
 ```
 
-### Pre-commit Hooks (Optional but Recommended)
+### Pre-commit Hooks (Automated Quality Checks)
 
-Install Husky to automatically lint and format before commits:
+This project uses Husky and lint-staged for automated pre-commit quality checks. See [PRE_COMMIT_HOOKS.md](./PRE_COMMIT_HOOKS.md) for detailed documentation.
 
+**Quick Setup:**
 ```bash
-npm install husky lint-staged --save-dev
-npx husky install
-npx husky add .husky/pre-commit "npm run lint && npm run format:check"
-npm set-script prepare "husky install"
+# Pre-commit hooks are automatically configured when you install dependencies
+npm install
 ```
 
-This ensures all committed code meets team standards.
+The hooks run automatically on each commit and will:
+- Run ESLint with auto-fix on staged TypeScript/JavaScript files
+- Format staged files with Prettier
+- Provide actionable error messages if issues are found
+
+**Manual Verification:**
+```bash
+# Run the same checks manually
+npm run lint
+npm run format:check
+npm run type-check
+```
 
 ## Features
 
@@ -288,11 +346,76 @@ Regenerate type declarations:
 npm run build
 ```
 
+If TypeScript errors persist, run type-check to identify specific issues:
+
+```bash
+npm run type-check
+```
+
 ### Wallet Connection Issues
 
-- Ensure wallet extension is installed
-- Check network configuration
-- Verify wallet is unlocked
+- Ensure wallet extension is installed (Freighter for Stellar, MetaMask for Ethereum)
+- Check network configuration matches the selected network (testnet/mainnet)
+- Verify wallet is unlocked and connected
+- Clear browser cache and localStorage if connection fails:
+  ```bash
+  # In browser console
+  localStorage.clear()
+  ```
+
+### Pre-commit Hook Failures
+
+If pre-commit hooks fail:
+
+1. Read the error output carefully - it will indicate which files have issues
+2. Run the checks manually to see full error details:
+   ```bash
+   npm run lint
+   npm run format:check
+   ```
+3. Fix the issues, then stage the changes again:
+   ```bash
+   git add .
+   git commit
+   ```
+
+To bypass hooks temporarily (not recommended):
+```bash
+git commit --no-verify -m "Your message"
+```
+
+### Build Failures
+
+If production build fails:
+
+1. Check for TypeScript errors:
+   ```bash
+   npm run type-check
+   ```
+2. Clear Next.js cache and rebuild:
+   ```bash
+   rm -rf .next
+   npm run build
+   ```
+3. Increase Node.js memory if build runs out of memory:
+   ```bash
+   NODE_OPTIONS=--max-old-space-size=4096 npm run build
+   ```
+
+### Environment Variables Not Loading
+
+- Ensure `.env.local` file exists in the frontend directory
+- Restart the development server after adding/changing environment variables
+- Verify variable names start with `NEXT_PUBLIC_` for client-side access
+- Check that variable names match exactly (case-sensitive)
+
+### Port Already in Use
+
+If port 3000 is already in use, Next.js will automatically try the next available port. To specify a custom port:
+
+```bash
+npm run dev -- -p 3001
+```
 
 ## Contributing
 
