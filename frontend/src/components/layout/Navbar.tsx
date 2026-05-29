@@ -12,6 +12,7 @@ import { useI18n } from "@/components/i18n/I18nProvider";
 import { SUPPORTED_LOCALES, stripLocaleFromPathname } from "@/lib/i18n/config";
 import { CommandPalette } from "./CommandPalette";
 import { MobileNavDrawer } from "./MobileNavDrawer";
+import { HealthIndicator } from "@/components/ui/HealthIndicator";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -54,6 +55,10 @@ export function Navbar() {
           <div className="flex items-center gap-2 md:gap-3">
             <div className="hidden sm:block">
               <CommandPalette />
+            </div>
+
+            <div className="hidden lg:flex items-center gap-2 mr-1">
+              <HealthIndicator className="text-xs" />
             </div>
 
             <div className="hidden md:flex items-center gap-2 mr-1">

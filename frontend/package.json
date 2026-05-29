@@ -30,7 +30,8 @@
     "prebuild": "npm run types:generate",
     "analyze": "ANALYZE=true npm run build",
     "analyze:server": "BUNDLE_ANALYZE=server npm run build",
-    "analyze:browser": "BUNDLE_ANALYZE=browser npm run build"
+    "analyze:browser": "BUNDLE_ANALYZE=browser npm run build",
+    "prepare": "husky"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^16.2.4",
@@ -75,6 +76,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.4.33",
     "prettier": "^3.2.5",
     "storybook": "^10.3.5",
@@ -82,5 +85,14 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.7.2",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,mdx,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }

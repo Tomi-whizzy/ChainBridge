@@ -366,21 +366,36 @@ export function TransactionFeed({ transactions, isLoading }: TransactionFeedProp
               <Database className="h-8 w-8 text-text-muted" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-text-primary">No transactions found</h3>
+              <h3 className="text-lg font-bold text-text-primary">No transactions match your filters</h3>
               <p className="text-sm text-text-secondary mt-1">
-                Try adjusting your search or filters.
+                {search || statusFilter !== "all" || chainFilter !== "all" || assetFilter !== "all" || rangeFilter !== "all"
+                  ? "Clear the filters below to view all transactions."
+                  : "No transactions are available at this time."}
               </p>
+              {(search || statusFilter !== "all" || chainFilter !== "all" || assetFilter !== "all" || rangeFilter !== "all") && (
+                <div className="mt-2 text-xs text-text-muted">
+                  Active filters: {[
+                    search && "search",
+                    statusFilter !== "all" && `status: ${statusFilter}`,
+                    chainFilter !== "all" && `chain: ${chainFilter}`,
+                    assetFilter !== "all" && `asset: ${assetFilter}`,
+                    rangeFilter !== "all" && `range: ${rangeFilter}`
+                  ].filter(Boolean).join(", ")}
+                </div>
+              )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearch("");
-                clearAdvancedFilters();
-              }}
-            >
-              Clear all filters
-            </Button>
+            {(search || statusFilter !== "all" || chainFilter !== "all" || assetFilter !== "all" || rangeFilter !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearch("");
+                  clearAdvancedFilters();
+                }}
+              >
+                Clear all filters
+              </Button>
+            )}
           </div>
         )}
       </div>
