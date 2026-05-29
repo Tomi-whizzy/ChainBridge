@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { Order, OrderSide, OrderStatus } from "@/types";
 import { Badge, Button, Modal } from "@/components/ui";
-import { ArrowUpDown, Filter, Search, Zap, Eye } from "lucide-react";
+import { ArrowUpDown, Filter, Search, Zap, Eye, ShoppingBag, RefreshCw, Plus } from "lucide-react";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { useUnifiedWallet } from "@/components/wallet/UnifiedWalletProvider";
 
@@ -153,6 +154,42 @@ export function OrderBookList({ orders, onTakeOrder }: OrderBookListProps) {
     }
     setSortConfig({ key, direction });
   };
+
+  if (orders.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-surface-overlay/20 px-6 py-20 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-surface-overlay">
+            <ShoppingBag size={28} className="text-text-muted" />
+          </div>
+          <div className="space-y-1">
+            <p className="font-semibold text-text-primary">No active orders</p>
+            <p className="text-sm text-text-secondary max-w-xs">
+              The order book is empty. Be the first to create a swap order or refresh to check for new ones.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-overlay px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-overlay/60 transition-colors"
+              aria-label="Refresh order book"
+            >
+              <RefreshCw size={14} />
+              Refresh
+            </button>
+            <Link
+              href="/orders/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
+            >
+              <Plus size={14} />
+              Create Order
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
