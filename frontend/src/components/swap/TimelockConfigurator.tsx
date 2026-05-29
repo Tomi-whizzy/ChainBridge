@@ -110,6 +110,7 @@ export function TimelockConfigurator({
       );
       return;
     }
+    // Clear error when value becomes valid
     setCustomError(null);
     onTimelockChange(parsed);
   };
@@ -171,12 +172,14 @@ export function TimelockConfigurator({
             max={MAX_TIMELOCK_HOURS}
             value={customHours}
             onChange={(event) => onCustomChange(event.target.value)}
+            aria-invalid={!!customError}
+            aria-describedby={customError ? "timelock-error" : "timelock-help"}
             className="w-full rounded-xl border border-border bg-surface-raised px-3 py-2 text-sm text-text-primary"
           />
           {customError ? (
-            <p className="text-xs text-red-300">{customError}</p>
+            <p id="timelock-error" className="text-xs text-red-300">{customError}</p>
           ) : (
-            <p className="text-xs text-text-muted">
+            <p id="timelock-help" className="text-xs text-text-muted">
               Bounds: {MIN_TIMELOCK_HOURS}h minimum, {MAX_TIMELOCK_HOURS}h maximum.
             </p>
           )}

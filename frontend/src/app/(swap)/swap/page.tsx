@@ -165,6 +165,23 @@ export default function SwapPage() {
   const isAmountValid = Number.isFinite(Number(amount)) && Number(amount) > 0;
   const canSubmit = isConnected && isAmountValid && !quoteLoading && !quoteError && !isSameChain;
 
+  // Validation messages
+  const amountError = useMemo(() => {
+    if (!amount) return null;
+    const parsed = Number(amount);
+    if (!Number.isFinite(parsed)) return "Amount must be a valid number";
+    if (parsed <= 0) return "Amount must be greater than 0";
+    if (walletBalance && parsed > Number(walletBalance)) return "Amount exceeds wallet balance";
+    return null;
+  }, [amount, walletBalance]);
+
+  const slippageError = useMemo(() => {
+    if (Number.isNaN(slippage)) return "Slippage must be a valid number";
+    if (slippage < SLIPPAGE_MIN) return `Slippage must be at least ${SLIPPAGE_MIN}%`;
+    if (slippage > SLIPPAGE_MAX) return `Slippage cannot exceed ${SLIPPAGE_MAX}%`;
+    return null;
+  }, [slippage]);
+
   // Inject wallet balance into the from-chain asset so ChainAssetSelector can display it (#383)
   const fromChainData = useMemo(() => {
     if (!balance || activeChain !== sourceChain) return CHAIN_SELECTOR_DATA;
@@ -347,7 +364,15 @@ export default function SwapPage() {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              aria-invalid={!!amountError}
+              aria-describedby={amountError ? "amount-error" : undefined}
             />
+            {amountError && (
+              <p id="amount-error" className="flex items-center gap-1.5 text-xs text-status-error">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                {amountError}
+              </p>
+            )}
             <div className="flex gap-1.5">
               {(["25%", "50%", "75%", "Max"] as const).map((label) => (
                 <button
