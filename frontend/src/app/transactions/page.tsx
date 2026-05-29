@@ -4,13 +4,15 @@ import { Suspense, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useTransactionStore } from "@/hooks/useTransactions";
 import { TransactionFeedSkeleton } from "@/components/transactions/TransactionFeedSkeleton";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
 
 const TransactionFeed = dynamic(
   () => import("@/components/transactions/TransactionFeed").then((m) => m.TransactionFeed),
   { loading: () => <TransactionFeedSkeleton rows={5} />, ssr: false }
 );
 import { Transaction, TransactionStatus } from "@/types";
-import { Activity, ShieldCheck, Zap } from "lucide-react";
+import { ShieldCheck, Zap } from "lucide-react";
 
 import { Badge } from "@/components/ui";
 import { buildCompletedLifecycle, buildTransactionLifecycle } from "@/lib/transactionLifecycle";
@@ -19,6 +21,7 @@ import { getExplorerUrl } from "@/lib/explorers";
 export default function TransactionsPage() {
   const transactions = useTransactionStore((state) => state.transactions);
   const addTransaction = useTransactionStore((state) => state.addTransaction);
+  const breadcrumbs = useBreadcrumbs();
 
   // Seed mock data on mount ONLY if empty
   useEffect(() => {
@@ -26,7 +29,7 @@ export default function TransactionsPage() {
       const mocks: Transaction[] = [
         {
           id: "tx_001",
-          hash: "GC...3X4",
+          hash: "GCZXPLBZDMTFSLOMNC4P4TSRFXXSNQIHLXEMMJMA5FXVVSQ3UFPPJAE",
           chain: "Stellar",
           type: "swap_lock",
           amount: "1,250",
@@ -36,12 +39,12 @@ export default function TransactionsPage() {
           requiredConfirmations: 1,
           timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
           proofVerified: true,
-          explorerUrl: getExplorerUrl("stellar", "GC...3X4"),
+          explorerUrl: getExplorerUrl("stellar", "GCZXPLBZDMTFSLOMNC4P4TSRFXXSNQIHLXEMMJMA5FXVVSQ3UFPPJAE"),
           lifecycle: buildCompletedLifecycle("Stellar"),
         },
         {
           id: "tx_002",
-          hash: "0x7a...f21",
+          hash: "0x7a8c3f9e2b5d1a6c4e9f2b7d8a3c5e9f2b7d8a3c5e9f2b7d8a3c5e9f2b7d8a3c",
           chain: "Ethereum",
           type: "swap_redeem",
           amount: "0.45",
@@ -51,12 +54,12 @@ export default function TransactionsPage() {
           requiredConfirmations: 12,
           timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
           proofVerified: false,
-          explorerUrl: getExplorerUrl("ethereum", "0x7a...f21"),
+          explorerUrl: getExplorerUrl("ethereum", "0x7a8c3f9e2b5d1a6c4e9f2b7d8a3c5e9f2b7d8a3c5e9f2b7d8a3c5e9f2b7d8a3c"),
           lifecycle: buildTransactionLifecycle("Ethereum", "confirm"),
         },
         {
           id: "tx_003",
-          hash: "bc1...qwe",
+          hash: "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
           chain: "Bitcoin",
           type: "inbound",
           amount: "0.0024",
@@ -65,7 +68,7 @@ export default function TransactionsPage() {
           confirmations: 0,
           requiredConfirmations: 3,
           timestamp: new Date().toISOString(),
-          explorerUrl: getExplorerUrl("bitcoin", "bc1...qwe"),
+          explorerUrl: getExplorerUrl("bitcoin", "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"),
           lifecycle: buildTransactionLifecycle("Bitcoin", "approval", {
             failedStep: "broadcast",
             errorMessage: "Bitcoin broadcast failed: mempool rejected the transaction fee rate.",
@@ -79,41 +82,30 @@ export default function TransactionsPage() {
   }, [addTransaction, transactions.length]);
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-12 md:py-20 animate-fade-in">
-      <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div>
-          <div className="mb-4 flex items-center gap-2">
-            <Badge variant="info" className="bg-brand-500/10 text-brand-500 border-brand-500/20">
-              Live Monitor
-            </Badge>
-          </div>
-          <h1 className="text-4xl font-extrabold text-text-primary tracking-tight sm:text-5xl">
-            Transaction Explorer
-          </h1>
-          <p className="mt-4 text-lg text-text-secondary leading-relaxed max-w-2xl">
-            Real-time monitoring of your cross-chain atomic swaps and native asset transfers. All
-            proofs are verified against chain state.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 md:flex">
-          <StatCard
+    <>
+      <PageHeader
+        title="Transaction Explorer"
+        subtitle="Real-time monitoring of your cross-chain atomic swaps and native asset transfers. All proofs are verified against chain state."
+        breadcrumbs={breadcrumbs}
+        secondaryActions={[
+          <StatCard key="total-swaps"
             label="Total Swaps"
             value={transactions.length.toString()}
             icon={<Zap className="h-4 w-4 text-brand-500" />}
-          />
-          <StatCard
+          />,
+          <StatCard key="verified-proofs"
             label="Verified Proofs"
             value={transactions.filter((t) => t.proofVerified).length.toString()}
             icon={<ShieldCheck className="h-4 w-4 text-emerald-500" />}
-          />
-        </div>
+          />,
+        ]}
+      />
+      <div className="container mx-auto max-w-6xl px-4 py-12 md:py-20 animate-fade-in">
+        <Suspense fallback={<TransactionFeedSkeleton rows={5} />}>
+          <TransactionFeed transactions={transactions} />
+        </Suspense>
       </div>
-
-      <Suspense fallback={<TransactionFeedSkeleton rows={5} />}>
-        <TransactionFeed transactions={transactions} />
-      </Suspense>
-    </div>
+    </>
   );
 }
 

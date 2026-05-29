@@ -14,6 +14,14 @@ interface CountdownTimerProps {
 
 type CountdownState = "normal" | "warning" | "critical" | "expired";
 
+/**
+ * Countdown Timer States and Thresholds
+ * - normal: Remaining time > warningThresholdSeconds (default: 3600s = 1 hour)
+ * - warning: 300s <= remaining time <= 3600s - Time is becoming urgent
+ * - critical: remaining time < 300s (default: 300s = 5 minutes) - Time is very urgent
+ * - expired: remaining time <= 0 - Countdown has ended
+ */
+
 function getRemainingSeconds(targetTimestamp: number) {
   return Math.max(targetTimestamp - Math.floor(Date.now() / 1000), 0);
 }
@@ -79,6 +87,13 @@ export function CountdownTimer({
         ? AlertTriangle
         : Clock3;
 
+  const urgencyMessage = {
+    normal: "Time remaining",
+    warning: "Time is becoming urgent",
+    critical: "Time is very urgent, expiring soon",
+    expired: "Expired and refundable",
+  };
+
   return (
     <div
       className={clsx(
@@ -89,8 +104,11 @@ export function CountdownTimer({
         countdownState === "normal" && "border-brand-500/20 bg-brand-500/5 text-text-primary",
         className
       )}
+      aria-label={`${urgencyMessage[countdownState]}: ${formatRemaining(remainingSeconds, compact)}`}
+      aria-live="polite"
+      aria-atomic="true"
     >
-      <Icon className="h-4 w-4 shrink-0" />
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       <span>{formatRemaining(remainingSeconds, compact)}</span>
     </div>
   );
