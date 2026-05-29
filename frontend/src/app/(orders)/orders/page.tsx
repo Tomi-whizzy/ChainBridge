@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BookmarkPlus, Clock3, Filter, RefreshCw, Search, Trash2, X, XCircle } from "lucide-react";
 
-import { Button, Card, EmptyState, Input, ToastContainer } from "@/components/ui";
+import { Button, Card, EmptyState, Input, Spinner, ToastContainer } from "@/components/ui";
 import { DEMO_ORDER_OWNER, useMockOrders, useOrderBookStore } from "@/hooks/useOrderBook";
 import { Order, OrderStatus } from "@/types";
 import { cn } from "@/lib/utils";
@@ -413,6 +413,12 @@ export default function OrdersPage() {
                     >
                       {order.derivedStatus}
                     </span>
+                    {pendingCancelId === order.id && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400">
+                        <Spinner size="sm" />
+                        <span>Cancelling</span>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-3 grid gap-2 text-sm text-text-secondary sm:grid-cols-2">
                     <p>Maker: {shortAddress(order.maker)}</p>

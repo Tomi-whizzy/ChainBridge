@@ -15,9 +15,6 @@ export default function DashboardPage() {
         title="User Dashboard"
         subtitle="Manage your profile, preferences, and view your swap history"
         breadcrumbs={breadcrumbs}
-        primaryAction={
-          <Button variant="primary">Save Changes</Button>
-        }
         secondaryActions={[
           <Button key="refresh" variant="secondary" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -41,29 +38,22 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface-overlay p-6 space-y-6">
-        <h2 className="text-xl font-semibold text-text-primary">Preferences</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            label="Preferred Chain"
-            options={[
-              { label: "Stellar", value: "stellar" },
-              { label: "Bitcoin", value: "bitcoin" },
-              { label: "Ethereum", value: "ethereum" },
-            ]}
-          />
-          <Select
-            label="Theme"
-            options={[
-              { label: "Dark", value: "dark" },
-              { label: "Light", value: "light" },
-            ]}
-          />
+      <Link
+        href="/settings"
+        className="rounded-xl border border-border bg-surface-overlay p-6 block hover:border-brand-500/50 transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-text-primary">Preferences</h2>
+            <p className="text-sm text-text-secondary mt-1">
+              Manage theme, notifications, and network settings
+            </p>
+          </div>
+          <Button variant="secondary" size="sm">
+            Open Settings
+          </Button>
         </div>
-      </div>
-
-      <Button variant="primary">Save Changes</Button>
+      </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
