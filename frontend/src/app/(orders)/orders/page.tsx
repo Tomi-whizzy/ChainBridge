@@ -3,9 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BookmarkPlus, Clock3, Filter, RefreshCw, Search, Trash2, X, XCircle } from "lucide-react";
+import {
+  BookmarkPlus,
+  Clock3,
+  Filter,
+  LayoutGrid,
+  Rows3,
+  RefreshCw,
+  Search,
+  Trash2,
+  Wallet,
+  X,
+  XCircle,
+} from "lucide-react";
 
 import { Button, Card, EmptyState, Input, Spinner, ToastContainer } from "@/components/ui";
+import { WalletConnect } from "@/components/swap/WalletConnect";
 import { DEMO_ORDER_OWNER, useMockOrders, useOrderBookStore } from "@/hooks/useOrderBook";
 import { Order, OrderStatus } from "@/types";
 import { cn } from "@/lib/utils";
@@ -77,6 +90,12 @@ export default function OrdersPage() {
     "chainbridge-order-filter-presets",
     []
   );
+  // Issue #398 — persisted comfortable/compact list density.
+  const [density, setDensity] = useLocalStorage<"comfortable" | "compact">(
+    "chainbridge-orders-density",
+    "comfortable"
+  );
+  const orderCardPaddingClass = density === "compact" ? "p-3" : "p-5";
   const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -268,11 +287,6 @@ export default function OrdersPage() {
             Review active and expired orders, filter by status, and cancel outstanding liquidity
             with direct feedback.
           </p>
-          {!address && (
-            <p className="mt-3 text-sm text-text-muted">
-              Showing the local demo portfolio until a wallet is connected.
-            </p>
-          )}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <StatCard label="Active" value={String(activeCount)} />
@@ -280,8 +294,36 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* Issue #400 — explicit demo-mode banner when no wallet is connected.
+          The previous tiny helper text was easy to miss; the banner uses the
+          existing surface tokens, keeps copy short, and offers the in-place
+          WalletConnect CTA so users can switch out of demo mode without
+          leaving the page. Disappears the moment `address` is non-null. */}
+      {!address && (
+        <Card
+          variant="raised"
+          className="flex flex-col gap-3 border-amber-500/30 bg-amber-500/5 p-4 md:flex-row md:items-center md:justify-between"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            <Wallet className="mt-0.5 h-5 w-5 flex-none text-amber-400" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Demo mode</p>
+              <p className="mt-1 text-xs text-text-secondary">
+                You are viewing the local demo portfolio. Connect a wallet to
+                see and manage your real orders.
+              </p>
+            </div>
+          </div>
+          <div className="md:flex-none">
+            <WalletConnect />
+          </div>
+        </Card>
+      )}
+
       <Card variant="raised" className="p-5">
-        <div className="grid gap-3 md:grid-cols-[1.3fr_auto_auto]">
+        <div className="grid gap-3 md:grid-cols-[1.3fr_auto_auto_auto]">
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -294,6 +336,31 @@ export default function OrdersPage() {
             onClick={() => setDrawerOpen(true)}
           >
             Advanced Filters
+          </Button>
+          {/* Issue #398 — density toggle. Single button that flips the
+              persisted preference; icon switches to mirror current state. */}
+          <Button
+            variant="secondary"
+            icon={
+              density === "comfortable" ? (
+                <Rows3 className="h-4 w-4" />
+              ) : (
+                <LayoutGrid className="h-4 w-4" />
+              )
+            }
+            onClick={() =>
+              setDensity((current) =>
+                current === "comfortable" ? "compact" : "comfortable"
+              )
+            }
+            aria-pressed={density === "compact"}
+            aria-label={
+              density === "comfortable"
+                ? "Switch to compact list density"
+                : "Switch to comfortable list density"
+            }
+          >
+            {density === "comfortable" ? "Compact" : "Comfortable"}
           </Button>
           <Link href={localizePath("/marketplace")}>
             <Button variant="secondary" className="w-full">
@@ -393,7 +460,11 @@ export default function OrdersPage() {
           />
         ) : (
           visibleOrders.map((order) => (
-            <Card key={order.id} variant="glass" className="p-5">
+            <Card
+              key={order.id}
+              variant="glass"
+              className={cn(orderCardPaddingClass)}
+            >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { RefreshCw } from "lucide-react";
 import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
+import { PortfolioChainsSection } from "@/components/dashboard/PortfolioChainsSection";
+import { RecentSwapsPreview } from "@/components/dashboard/RecentSwapsPreview";
 
 export default function DashboardPage() {
   const breadcrumbs = useBreadcrumbs();
@@ -22,7 +24,16 @@ export default function DashboardPage() {
           </Button>,
         ]}
       />
-      
+
+      {/* Issue #405 — surfaces the existing PortfolioChainCard component
+          (previously orphaned) so the dashboard leads with portfolio
+          context rather than a profile form. */}
+      <PortfolioChainsSection />
+
+      {/* Issue #404 — recent swap-history preview. Reads from the
+          persisted swap-history store and links out to `/tracking`. */}
+      <RecentSwapsPreview />
+
       <div className="rounded-xl border border-border bg-surface-overlay p-6 space-y-6">
         <h2 className="text-xl font-semibold text-text-primary">Profile</h2>
 
