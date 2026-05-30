@@ -103,6 +103,7 @@ class RateQuoteResponse(BaseModel):
     slippage_estimate: float
     effective_rate: float
     timestamp: str
+    price_warnings: Optional[list[str]] = None
 
 
 class CEXComparisonRequest(BaseModel):

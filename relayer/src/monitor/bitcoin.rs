@@ -104,7 +104,7 @@ async fn poll_blocks(
             let txid = tx["txid"].as_str().unwrap_or("");
             // Simulate HTLC detection
             if txid.starts_with("a") { // Dummy condition
-                println!("[Bitcoin] HTLC detected: {}", txid);
+                println!("[Bitcoin] HTLC detected: {} -> routing to stellar", txid);
                 let proof_tx = crate::retry::RetryableTransaction {
                     id: format!("bitcoin-proof-{}", txid),
                     chain: "stellar".to_string(),

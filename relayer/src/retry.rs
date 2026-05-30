@@ -116,13 +116,24 @@ impl RetryProcessor {
                     Err(e) => {
                         self.metrics.mark_tx_error(&tx.chain);
                         println!("Transaction {} failed on attempt {}: {}", tx.id, tx.attempt + 1, e);
-                        self.queue.retry_failed(&tx.id, tx.max_attempts, self.config.max_retry_backoff_secs).await;
-                        if tx.attempt + 1 >= tx.max_attempts {
+
+                        // Dead-letter unknown chains immediately instead of retrying.
+                        if matches!(&e, crate::submit::SubmitError::UnsupportedChain(_)) {
+                            println!(
+                                "[Dead-letter] Transaction {} has unsupported chain '{}'; dropping",
+                                tx.id, tx.chain
+                            );
                             self.metrics.mark_tx_retry_failure(&tx.chain);
-                            // TODO: Send failure notification
-                            println!("Transaction {} failed permanently after {} attempts", tx.id, tx.max_attempts);
+                            self.queue.mark_success(&tx.id).await;
                         } else {
-                            self.metrics.mark_tx_retry(&tx.chain);
+                            self.queue.retry_failed(&tx.id, tx.max_attempts, self.config.max_retry_backoff_secs).await;
+                            if tx.attempt + 1 >= tx.max_attempts {
+                                self.metrics.mark_tx_retry_failure(&tx.chain);
+                                // TODO: Send failure notification
+                                println!("Transaction {} failed permanently after {} attempts", tx.id, tx.max_attempts);
+                            } else {
+                                self.metrics.mark_tx_retry(&tx.chain);
+                            }
                         }
                     }
                 }
@@ -189,5 +200,16 @@ mod tests {
             !status.contains_key("tx-exhaust"),
             "exhausted tx should be removed from queue"
         );
+    }
+
+    #[tokio::test]
+    async fn test_mark_success_removes_tx() {
+        let queue = RetryQueue::new();
+        queue.enqueue(make_tx("tx-ok", 0, 5)).await;
+
+        queue.mark_success("tx-ok").await;
+
+        let status = queue.status().await;
+        assert!(!status.contains_key("tx-ok"), "successful tx should be removed");
     }
 }

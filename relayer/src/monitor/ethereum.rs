@@ -94,6 +94,7 @@ async fn poll_logs(
             // Simulate event handling
             if event_sig.starts_with("0x") { // Dummy
                 let tx_id = format!("ethereum-proof-{}", log["transactionHash"].as_str().unwrap_or("unknown"));
+                println!("[Ethereum] Event detected {} -> routing to stellar", &event_sig[..10.min(event_sig.len())]);
                 let tx = crate::retry::RetryableTransaction {
                     id: tx_id,
                     chain: "stellar".to_string(),
