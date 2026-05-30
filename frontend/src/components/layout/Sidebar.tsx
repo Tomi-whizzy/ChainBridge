@@ -8,11 +8,13 @@ import { NAV_LINKS } from "./navigation";
 import { Layers, ChevronRight } from "lucide-react";
 import { stripLocaleFromPathname } from "@/lib/i18n/config";
 import { shouldPrefetch } from "@/lib/prefetch";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export function Sidebar() {
   const pathname = usePathname();
   const normalizedPathname = stripLocaleFromPathname(pathname);
   const { t, localizePath } = useI18n();
+  const isAdmin = useIsAdmin();
 
   return (
     <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-surface-raised transition-all lg:flex z-50">
@@ -32,7 +34,7 @@ export function Sidebar() {
       {/* Sidebar Navigation */}
       <nav className="flex-1 overflow-y-auto py-6 px-3 no-scrollbar" aria-label="Main Navigation">
         <ul className="space-y-1.5" role="list">
-          {NAV_LINKS.map((link) => {
+          {NAV_LINKS.filter((link) => link.href !== "/admin" || isAdmin).map((link) => {
             const isActive = normalizedPathname === link.href;
             return (
               <li key={link.href}>
