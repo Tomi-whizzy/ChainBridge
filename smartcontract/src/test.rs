@@ -1850,7 +1850,10 @@ fn test_claim_htlc_emits_event() {
 
     // Verify the claim event was emitted
     let events = env.events().all();
-    assert!(!events.is_empty(), "claim_htlc must emit at least one event");
+    assert!(
+        !events.is_empty(),
+        "claim_htlc must emit at least one event"
+    );
 
     // The last emitted event belongs to our contract
     let (emitted_contract, topics, _data) = events.last().unwrap();
@@ -1883,14 +1886,21 @@ fn test_refund_htlc_emits_event() {
 
     // Verify the refund event was emitted
     let events = env.events().all();
-    assert!(!events.is_empty(), "refund_htlc must emit at least one event");
+    assert!(
+        !events.is_empty(),
+        "refund_htlc must emit at least one event"
+    );
 
     // The last emitted event belongs to our contract
     let (emitted_contract, topics, _data) = events.last().unwrap();
     assert_eq!(emitted_contract, contract_id);
 
     // Event has two topics: the "htlc" namespace and the "refunded" action
-    assert_eq!(topics.len(), 2, "refund event must carry exactly two topics");
+    assert_eq!(
+        topics.len(),
+        2,
+        "refund event must carry exactly two topics"
+    );
 }
 
 // =============================================================================
@@ -1909,19 +1919,24 @@ fn test_cleanup_expired_htlcs_partial_then_remainder() {
     // Create 5 HTLCs and mark all of them for cleanup
     let mut htlc_ids = soroban_sdk::Vec::new(&env);
     for i in 0u8..5 {
-        let htlc_id =
-            create_test_htlc(&env, &client, &sender, &receiver, 100, &[i + 1; 32], 100);
+        let htlc_id = create_test_htlc(&env, &client, &sender, &receiver, 100, &[i + 1; 32], 100);
         htlc_ids.push_back(htlc_id);
         client.mark_htlc_expired(&htlc_id);
     }
 
     // First pass: clean only 2 of the 5
     let cleaned_first = client.cleanup_expired_htlcs(&2u32);
-    assert_eq!(cleaned_first, 2, "first call should process exactly 2 HTLCs");
+    assert_eq!(
+        cleaned_first, 2,
+        "first call should process exactly 2 HTLCs"
+    );
 
     // Second pass: clean 2 more (of the remaining 3)
     let cleaned_second = client.cleanup_expired_htlcs(&2u32);
-    assert_eq!(cleaned_second, 2, "second call should process exactly 2 more HTLCs");
+    assert_eq!(
+        cleaned_second, 2,
+        "second call should process exactly 2 more HTLCs"
+    );
 
     // Third pass: clean the last 1
     let cleaned_third = client.cleanup_expired_htlcs(&2u32);
@@ -1943,14 +1958,174 @@ fn test_cleanup_expired_htlcs_zero_limit_uses_default_batch() {
 
     // Enqueue 3 HTLCs
     for i in 0u8..3 {
-        let htlc_id =
-            create_test_htlc(&env, &client, &sender, &receiver, 100, &[i + 1; 32], 100);
+        let htlc_id = create_test_htlc(&env, &client, &sender, &receiver, 100, &[i + 1; 32], 100);
         client.mark_htlc_expired(&htlc_id);
     }
 
     // limit = 0 should use the default batch (≥ 3) and clean all
     let cleaned = client.cleanup_expired_htlcs(&0u32);
-    assert_eq!(cleaned, 3, "limit=0 should use default batch and clean all 3");
+    assert_eq!(
+        cleaned, 3,
+        "limit=0 should use default batch and clean all 3"
+    );
+}
+
+// =============================================================================
+// ISSUE #466: ENFORCE MAXIMUM FEE RATE
+// =============================================================================
+
+#[test]
+fn test_set_fee_rate_within_max_accepted() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+
+    client.init(&admin);
+
+    client.set_fee_rate(&admin, &500);
+    client.set_fee_rate(&admin, &0);
+    client.set_fee_rate(&admin, &1000); // MAX_FEE_RATE boundary
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #21)")]
+fn test_set_fee_rate_exceeds_max_rejected() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+
+    client.init(&admin);
+
+    client.set_fee_rate(&admin, &1001); // MAX_FEE_RATE + 1
+}
+
+// =============================================================================
+// ISSUE #464: REJECT SAME-CHAIN ORDERS
+// =============================================================================
+
+#[test]
+#[should_panic(expected = "Error(Contract, #16)")]
+fn test_error_same_chain_order_rejected() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let creator = Address::generate(&env);
+
+    client.init(&admin);
+
+    let expiry = env.ledger().timestamp() + 86400;
+    client.create_order(
+        &creator,
+        &Chain::Bitcoin,
+        &Chain::Bitcoin,
+        &String::from_str(&env, "BTC"),
+        &String::from_str(&env, "BTC"),
+        &1000,
+        &1000,
+        &expiry,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #16)")]
+fn test_error_same_chain_order_with_min_fill_rejected() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let creator = Address::generate(&env);
+
+    client.init(&admin);
+
+    let expiry = env.ledger().timestamp() + 86400;
+    client.create_order_with_min_fill(
+        &creator,
+        &Chain::Ethereum,
+        &Chain::Ethereum,
+        &String::from_str(&env, "ETH"),
+        &String::from_str(&env, "ETH"),
+        &1000,
+        &1000,
+        &expiry,
+        &500,
+    );
+}
+
+// =============================================================================
+// ISSUE #460: EMIT EVENT FOR HTLC CREATION
+// =============================================================================
+
+#[test]
+fn test_create_htlc_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+
+    client.init(&admin);
+
+    let secret = Bytes::from_slice(&env, &[1u8; 32]);
+    let hash_lock: BytesN<32> = env.crypto().sha256(&secret).into();
+    let time_lock = env.ledger().timestamp() + 86400;
+
+    client.create_htlc(
+        &sender,
+        &receiver,
+        &1000,
+        &hash_lock,
+        &time_lock,
+        &OptMultiSig::None,
+    );
+
+    let events = env.events().all();
+    assert!(
+        !events.is_empty(),
+        "create_htlc must emit at least one event"
+    );
+
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+    assert_eq!(
+        topics.len(),
+        2,
+        "create event must carry exactly two topics"
+    );
+}
+
+#[test]
+fn test_create_htlc_with_algo_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+
+    client.init(&admin);
+
+    let secret = Bytes::from_slice(&env, &[0xabu8; 32]);
+    let hash_lock: BytesN<32> = env.crypto().keccak256(&secret).into();
+    let time_lock = env.ledger().timestamp() + 86400;
+
+    client.create_htlc_with_algo(
+        &sender,
+        &receiver,
+        &1000,
+        &hash_lock,
+        &time_lock,
+        &HashAlgorithm::Keccak256,
+    );
+
+    let events = env.events().all();
+    assert!(
+        !events.is_empty(),
+        "create_htlc_with_algo must emit at least one event"
+    );
+
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+    assert_eq!(
+        topics.len(),
+        2,
+        "create event must carry exactly two topics"
+    );
 }
 
 // =============================================================================

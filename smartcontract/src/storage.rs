@@ -58,6 +58,9 @@ pub enum DataKey {
 
 const CLEANUP_BATCH_SIZE: u64 = 10;
 
+/// Maximum fee rate in basis points (10% = 1000 bps).
+pub const MAX_FEE_RATE: u32 = 1000;
+
 pub fn has_admin(env: &Env) -> bool {
     env.storage().instance().has(&DataKey::Admin)
 }

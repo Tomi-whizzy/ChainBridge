@@ -62,6 +62,9 @@ pub fn create_order_with_min_fill(
     if storage::is_paused(env) {
         return Err(Error::Paused);
     }
+    if from_chain == to_chain {
+        return Err(Error::InvalidChain);
+    }
     if from_amount <= 0 || to_amount <= 0 {
         return Err(Error::InvalidAmount);
     }

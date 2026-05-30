@@ -197,6 +197,9 @@ impl ChainBridge {
         if admin != storage::read_admin(&env) {
             return Err(Error::Unauthorized);
         }
+        if rate > storage::MAX_FEE_RATE {
+            return Err(Error::InvalidFeeRate);
+        }
         storage::set_fee_rate(&env, rate);
         Ok(())
     }
