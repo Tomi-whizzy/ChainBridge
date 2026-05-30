@@ -118,6 +118,23 @@ class TestPriceHistory:
             history = service.get_price_history(asset="XLM")
             assert all(r["asset"] == "XLM" for r in history)
 
+    @pytest.mark.anyio
+    async def test_per_asset_history_is_bounded(self, service):
+        from app.services.price_oracle import MAX_HISTORY_PER_ASSET, PriceHistoryEntry
+
+        for _ in range(MAX_HISTORY_PER_ASSET + 10):
+            service._history.append(
+                PriceHistoryEntry(
+                    asset="XLM", price_usd=0.15, source="test", timestamp="t"
+                )
+            )
+
+        with patch.object(service, "_fetch_coingecko", return_value=0.15):
+            await service.get_price("XLM")
+
+        xlm_count = sum(1 for e in service._history if e.asset == "XLM")
+        assert xlm_count <= MAX_HISTORY_PER_ASSET
+
 
 class TestAlerts:
     @pytest.mark.anyio

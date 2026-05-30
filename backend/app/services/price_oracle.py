@@ -26,6 +26,8 @@ DEFAULT_PRICES: dict[str, float] = {
 PRICE_CACHE_TTL = 60
 # Maximum acceptable deviation between sources (10%)
 MAX_PRICE_DEVIATION = 0.10
+# Maximum price history entries retained per asset
+MAX_HISTORY_PER_ASSET = 500
 
 
 @dataclass
@@ -260,5 +262,12 @@ class PriceOracleService:
                 timestamp=price_data.timestamp,
             )
         )
+        # Per-asset cap: remove oldest entries for this asset when over limit
+        asset_indices = [i for i, e in enumerate(self._history) if e.asset == price_data.asset]
+        if len(asset_indices) > MAX_HISTORY_PER_ASSET:
+            to_remove = len(asset_indices) - MAX_HISTORY_PER_ASSET
+            for i in reversed(asset_indices[:to_remove]):
+                self._history.pop(i)
+        # Global cap
         if len(self._history) > 5000:
             self._history = self._history[-5000:]
