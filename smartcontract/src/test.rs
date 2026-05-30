@@ -1952,3 +1952,184 @@ fn test_cleanup_expired_htlcs_zero_limit_uses_default_batch() {
     let cleaned = client.cleanup_expired_htlcs(&0u32);
     assert_eq!(cleaned, 3, "limit=0 should use default batch and clean all 3");
 }
+
+// =============================================================================
+// ISSUE #463: EMIT EVENTS FOR ORDER LIFECYCLE CHANGES
+// =============================================================================
+
+#[test]
+fn test_create_order_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let creator = Address::generate(&env);
+
+    client.init(&admin);
+
+    let expiry = env.ledger().timestamp() + 86400;
+    client.create_order(
+        &creator,
+        &Chain::Bitcoin,
+        &Chain::Ethereum,
+        &String::from_str(&env, "BTC"),
+        &String::from_str(&env, "ETH"),
+        &1000,
+        &1000,
+        &expiry,
+    );
+
+    let events = env.events().all();
+    assert!(!events.is_empty(), "create_order must emit at least one event");
+
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+    assert_eq!(topics.len(), 2, "create event must carry exactly two topics");
+}
+
+#[test]
+fn test_cancel_order_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let creator = Address::generate(&env);
+
+    client.init(&admin);
+
+    let expiry = env.ledger().timestamp() + 86400;
+    let order_id = client.create_order(
+        &creator,
+        &Chain::Bitcoin,
+        &Chain::Ethereum,
+        &String::from_str(&env, "BTC"),
+        &String::from_str(&env, "ETH"),
+        &1000,
+        &1000,
+        &expiry,
+    );
+
+    client.cancel_order(&creator, &order_id);
+
+    let events = env.events().all();
+    assert!(!events.is_empty(), "cancel_order must emit at least one event");
+
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+    assert_eq!(topics.len(), 2, "cancel event must carry exactly two topics");
+}
+
+#[test]
+fn test_match_order_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let creator = Address::generate(&env);
+    let counterparty = Address::generate(&env);
+
+    client.init(&admin);
+
+    let expiry = env.ledger().timestamp() + 86400;
+    let order_id = client.create_order(
+        &creator,
+        &Chain::Bitcoin,
+        &Chain::Ethereum,
+        &String::from_str(&env, "BTC"),
+        &String::from_str(&env, "ETH"),
+        &1000,
+        &1000,
+        &expiry,
+    );
+
+    client.match_order(&counterparty, &order_id);
+
+    let events = env.events().all();
+    assert!(!events.is_empty(), "match_order must emit at least one event");
+
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+    assert_eq!(topics.len(), 2, "match event must carry exactly two topics");
+}
+
+#[test]
+fn test_expire_order_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let creator = Address::generate(&env);
+
+    client.init(&admin);
+
+    let expiry = env.ledger().timestamp() + 100;
+    let order_id = client.create_order(
+        &creator,
+        &Chain::Bitcoin,
+        &Chain::Ethereum,
+        &String::from_str(&env, "BTC"),
+        &String::from_str(&env, "ETH"),
+        &1000,
+        &1000,
+        &expiry,
+    );
+
+    env.ledger().set_timestamp(expiry + 1);
+    client.expire_order(&order_id);
+
+    let events = env.events().all();
+    assert!(!events.is_empty(), "expire_order must emit at least one event");
+
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+    assert_eq!(topics.len(), 2, "expire event must carry exactly two topics");
+}
+
+// =============================================================================
+// ISSUE #467: ADMIN TRANSFER
+// =============================================================================
+
+#[test]
+fn test_transfer_admin_success() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let new_admin = Address::generate(&env);
+
+    client.init(&admin);
+
+    // Transfer admin to new_admin
+    client.transfer_admin(&admin, &new_admin);
+
+    // New admin can call admin-only functions
+    client.add_chain(&new_admin, &42);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn test_old_admin_loses_privileges_after_transfer() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let new_admin = Address::generate(&env);
+
+    client.init(&admin);
+
+    // Transfer admin to new_admin
+    client.transfer_admin(&admin, &new_admin);
+
+    // Old admin should no longer have admin privileges
+    client.add_chain(&admin, &99);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn test_transfer_admin_unauthorized_non_admin_cannot_transfer() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let non_admin = Address::generate(&env);
+    let new_admin = Address::generate(&env);
+
+    client.init(&admin);
+
+    // Non-admin tries to transfer admin
+    client.transfer_admin(&non_admin, &new_admin);
+}
