@@ -41,6 +41,8 @@ class TestChainFeeEstimation:
         assert estimate.chain == "unknown"
         assert estimate.total_fee == 0.0
         assert len(estimate.components) == 0
+        assert estimate.warning is not None
+        assert "not supported" in estimate.warning
 
     def test_fee_components_structure(self, service):
         estimate = service.estimate_chain_fee("stellar")

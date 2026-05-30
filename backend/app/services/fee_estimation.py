@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,6 +25,7 @@ class FeeEstimate:
     asset: str
     components: list[FeeComponent]
     estimated_at: str
+    warning: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -38,6 +42,7 @@ class FeeEstimate:
                 for c in self.components
             ],
             "estimated_at": self.estimated_at,
+            "warning": self.warning,
         }
 
 
@@ -123,12 +128,15 @@ class FeeEstimationService:
         chain_lower = chain.lower()
         config = CHAIN_FEE_CONFIG.get(chain_lower)
         if not config:
+            msg = f"Chain '{chain_lower}' is not supported for fee estimation."
+            logger.warning(msg)
             return FeeEstimate(
                 chain=chain_lower,
                 total_fee=0.0,
                 asset="UNKNOWN",
                 components=[],
                 estimated_at=datetime.now(timezone.utc).isoformat(),
+                warning=msg,
             )
 
         network_fee = FeeComponent(
