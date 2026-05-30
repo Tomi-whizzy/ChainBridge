@@ -21,9 +21,10 @@ class RateQuote:
     slippage_estimate: float
     effective_rate: float
     timestamp: str
+    price_warnings: Optional[list[str]] = None
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "from_asset": self.from_asset,
             "to_asset": self.to_asset,
             "from_amount": self.from_amount,
@@ -34,6 +35,9 @@ class RateQuote:
             "effective_rate": self.effective_rate,
             "timestamp": self.timestamp,
         }
+        if self.price_warnings:
+            result["price_warnings"] = self.price_warnings
+        return result
 
 
 @dataclass
@@ -98,6 +102,20 @@ class SwapRateCalculatorService:
         from_price_usd = exchange.get("from_price_usd", 0.0)
         amount_usd = from_amount * from_price_usd
 
+        price_warnings: list[str] = []
+        sources = exchange.get("sources", {})
+
+        for asset in [from_asset.upper(), to_asset.upper()]:
+            price_data = await self._price_oracle.get_price(asset)
+            if price_data.from_cache:
+                price_warnings.append(
+                    f"Price for {asset} is from cache and may be stale."
+                )
+            if price_data.is_fallback:
+                price_warnings.append(
+                    f"Price for {asset} is a fallback estimate; live data unavailable."
+                )
+
         slippage = self._estimate_slippage(amount_usd)
         effective_rate = rate * (1 - slippage) if rate > 0 else 0.0
         to_amount = from_amount * effective_rate
@@ -121,6 +139,7 @@ class SwapRateCalculatorService:
             slippage_estimate=slippage,
             effective_rate=round(effective_rate, 8),
             timestamp=now_iso,
+            price_warnings=price_warnings or None,
         )
 
         self._record_rate(quote)

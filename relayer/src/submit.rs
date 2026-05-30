@@ -123,6 +123,7 @@ mod tests {
             max_retries: 3,
             stellar_start_ledger: 0,
             max_retry_backoff_secs: 300,
+            cursor_path: None,
         }
     }
 
@@ -158,5 +159,30 @@ mod tests {
     async fn test_rejected_display() {
         let err = SubmitError::Rejected("insufficient funds".into());
         assert_eq!(err.to_string(), "Transaction rejected: insufficient funds");
+    }
+
+    #[tokio::test]
+    async fn test_bitcoin_routing() {
+        let config = test_config();
+        let tx = test_tx("bitcoin", 0);
+        let result = submit_transaction(&config, tx).await;
+        // Bitcoin submit returns a simulated Rejected on attempt 0
+        assert!(matches!(result, Err(SubmitError::Rejected(_))));
+    }
+
+    #[tokio::test]
+    async fn test_ethereum_routing() {
+        let config = test_config();
+        let tx = test_tx("ethereum", 0);
+        let result = submit_transaction(&config, tx).await;
+        assert!(matches!(result, Err(SubmitError::Rejected(_))));
+    }
+
+    #[tokio::test]
+    async fn test_stellar_routing() {
+        let config = test_config();
+        let tx = test_tx("stellar", 0);
+        let result = submit_transaction(&config, tx).await;
+        assert!(matches!(result, Err(SubmitError::Rejected(_))));
     }
 }

@@ -17,6 +17,8 @@ pub struct RelayerConfig {
     /// Maximum exponential backoff delay in seconds between transaction retries.
     /// The backoff sequence (2, 4, 8, …) is capped at this value. Default: 300.
     pub max_retry_backoff_secs: u64,
+    /// Optional file path for persisting the Stellar event cursor across restarts.
+    pub cursor_path: Option<String>,
 }
 
 impl RelayerConfig {
@@ -52,6 +54,7 @@ impl RelayerConfig {
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(300),
+            cursor_path: std::env::var("CURSOR_PATH").ok(),
         }
     }
 }

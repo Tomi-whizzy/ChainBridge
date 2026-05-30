@@ -35,6 +35,8 @@ class PriceData:
     source: str
     timestamp: str
     confidence: str  # "high", "medium", "low"
+    from_cache: bool = False
+    is_fallback: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -43,6 +45,8 @@ class PriceData:
             "source": self.source,
             "timestamp": self.timestamp,
             "confidence": self.confidence,
+            "from_cache": self.from_cache,
+            "is_fallback": self.is_fallback,
         }
 
 
@@ -85,16 +89,14 @@ class PriceOracleService:
         asset_upper = asset.upper()
         now = time.time()
 
-        # Check cache
         if asset_upper in self._cache:
             cached_data, cached_at = self._cache[asset_upper]
             if now - cached_at < PRICE_CACHE_TTL:
+                cached_data.from_cache = True
                 return cached_data
 
-        # Try external sources, fall back to defaults
         price_data = await self._fetch_from_sources(asset_upper)
 
-        # Cache the result
         self._cache[asset_upper] = (price_data, now)
         self._record_history(price_data)
 
@@ -200,7 +202,6 @@ class PriceOracleService:
                 confidence="high",
             )
 
-        # Fallback to default prices
         fallback_price = DEFAULT_PRICES.get(asset, 0.0)
         confidence = "medium" if fallback_price > 0 else "low"
 
@@ -221,6 +222,7 @@ class PriceOracleService:
             source="default",
             timestamp=now_iso,
             confidence=confidence,
+            is_fallback=True,
         )
 
     async def _fetch_coingecko(self, asset: str) -> Optional[float]:

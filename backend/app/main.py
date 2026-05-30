@@ -10,6 +10,7 @@ from app.config.redis import close_redis, get_redis, init_redis
 from app.indexer import IndexerManager
 from app.middleware.metrics import MetricsMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.request_id import RequestIDMiddleware
 from app.observability.metrics import update_indexer_metrics
 from app.routes import api_router
 from app.routes.ws import router as ws_router
@@ -55,6 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(RequestIDMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(MetricsMiddleware)
 

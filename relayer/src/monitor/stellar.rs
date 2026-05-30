@@ -56,6 +56,36 @@ fn parse_topic_value(topic: &serde_json::Value) -> Option<String> {
     }
 }
 
+/// Extract the counterparty chain from a Soroban event value body.
+///
+/// The event value is expected to be a struct with a `counterparty_chain` field
+/// (e.g. `{"type": "struct", "value": [{"key": ..., "val": {"type": "symbol", "value": "ethereum"}}]}`).
+/// Falls back to `None` when the field is missing or unparseable.
+fn extract_counterparty_chain(event: &serde_json::Value) -> Option<String> {
+    let value = event.get("value")?;
+    if let Some(obj) = value.as_object() {
+        if let Some(typ) = obj.get("type").and_then(|t| t.as_str()) {
+            if typ == "struct" {
+                if let Some(fields) = obj.get("value").and_then(|v| v.as_array()) {
+                    for field in fields {
+                        let key = field.get("key")?;
+                        let key_str = parse_topic_value(key);
+                        if key_str.as_deref() == Some("counterparty_chain") {
+                            let val = field.get("val")?;
+                            return parse_topic_value(val);
+                        }
+                    }
+                }
+                return None;
+            }
+        }
+        if let Some(chain) = obj.get("counterparty_chain") {
+            return chain.as_str().map(String::from);
+        }
+    }
+    value.as_str().map(String::from)
+}
+
 pub async fn monitor_loop(config: RelayerConfig, metrics: RelayerMetrics, retry_queue: std::sync::Arc<crate::retry::RetryQueue>) {
     println!(
         "[Stellar] Starting monitor - RPC: {}, contract: {}",
@@ -162,23 +192,36 @@ async fn poll_events(
             }
 
             match event_type.as_str() {
-                "htlc_created" => {
-                    let tx_id = format!("stellar-htlc-proof-{}", event["id"].as_str().unwrap_or("unknown"));
+                "htlc_created" | "swap_matched" => {
+                    let target_chain = extract_counterparty_chain(event)
+                        .unwrap_or_else(|| {
+                            eprintln!(
+                                "[Stellar] No counterparty chain in event {}; defaulting to bitcoin",
+                                event["id"].as_str().unwrap_or("unknown")
+                            );
+                            "bitcoin".to_string()
+                        });
+
+                    if !["bitcoin", "ethereum", "stellar"].contains(&target_chain.as_str()) {
+                        eprintln!(
+                            "[Stellar] Unknown target chain '{}' for event {}; skipping",
+                            target_chain,
+                            event["id"].as_str().unwrap_or("unknown")
+                        );
+                        continue;
+                    }
+
+                    let prefix = if event_type == "htlc_created" { "htlc-proof" } else { "swap-htlc" };
+                    let tx_id = format!("stellar-{}-{}", prefix, event["id"].as_str().unwrap_or("unknown"));
+
+                    println!(
+                        "[Stellar] Routing {} to chain: {}",
+                        event_type, target_chain
+                    );
+
                     let tx = crate::retry::RetryableTransaction {
                         id: tx_id,
-                        chain: "bitcoin".to_string(),
-                        tx_data: vec![],
-                        attempt: 0,
-                        max_attempts: config.max_retries,
-                        next_retry_at: std::time::SystemTime::now(),
-                    };
-                    retry_queue.enqueue(tx).await;
-                }
-                "swap_matched" => {
-                    let tx_id = format!("stellar-swap-htlc-{}", event["id"].as_str().unwrap_or("unknown"));
-                    let tx = crate::retry::RetryableTransaction {
-                        id: tx_id,
-                        chain: "bitcoin".to_string(),
+                        chain: target_chain,
                         tx_data: vec![],
                         attempt: 0,
                         max_attempts: config.max_retries,
@@ -243,6 +286,88 @@ mod tests {
     fn test_parse_number_does_not_panic() {
         let val = serde_json::Value::Number(serde_json::Number::from(42));
         assert_eq!(parse_topic_value(&val), None);
+    }
+
+    #[test]
+    fn test_extract_counterparty_chain_from_struct() {
+        let event = serde_json::json!({
+            "id": "evt-001",
+            "value": {
+                "type": "struct",
+                "value": [
+                    {
+                        "key": {"type": "symbol", "value": "counterparty_chain"},
+                        "val": {"type": "symbol", "value": "ethereum"}
+                    }
+                ]
+            }
+        });
+        assert_eq!(extract_counterparty_chain(&event), Some("ethereum".to_string()));
+    }
+
+    #[test]
+    fn test_extract_counterparty_chain_bitcoin() {
+        let event = serde_json::json!({
+            "id": "evt-002",
+            "value": {
+                "type": "struct",
+                "value": [
+                    {
+                        "key": {"type": "symbol", "value": "counterparty_chain"},
+                        "val": {"type": "symbol", "value": "bitcoin"}
+                    }
+                ]
+            }
+        });
+        assert_eq!(extract_counterparty_chain(&event), Some("bitcoin".to_string()));
+    }
+
+    #[test]
+    fn test_extract_counterparty_chain_from_flat_map() {
+        let event = serde_json::json!({
+            "id": "evt-003",
+            "value": {"counterparty_chain": "ethereum"}
+        });
+        assert_eq!(extract_counterparty_chain(&event), Some("ethereum".to_string()));
+    }
+
+    #[test]
+    fn test_extract_counterparty_chain_missing_field_returns_none() {
+        let event = serde_json::json!({
+            "id": "evt-004",
+            "value": {"type": "struct", "value": []}
+        });
+        assert_eq!(extract_counterparty_chain(&event), None);
+    }
+
+    #[test]
+    fn test_extract_counterparty_chain_missing_value_returns_none() {
+        let event = serde_json::json!({"id": "evt-005"});
+        assert_eq!(extract_counterparty_chain(&event), None);
+    }
+
+    #[test]
+    fn test_routing_bitcoin_ethereum_stellar_are_valid() {
+        let valid = ["bitcoin", "ethereum", "stellar"];
+        for chain in &valid {
+            assert!(
+                ["bitcoin", "ethereum", "stellar"].contains(chain),
+                "{} should be a valid target chain",
+                chain
+            );
+        }
+    }
+
+    #[test]
+    fn test_routing_unknown_chain_is_rejected() {
+        let unknown = ["solana", "tron", "polygon", ""];
+        for chain in &unknown {
+            assert!(
+                !["bitcoin", "ethereum", "stellar"].contains(chain),
+                "{} should be rejected as a target chain",
+                chain
+            );
+        }
     }
 
     #[test]
