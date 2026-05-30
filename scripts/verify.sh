@@ -17,6 +17,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SMARTCONTRACT_DIR="${SCRIPT_DIR}/../smartcontract"
+RELAYER_DIR="${SCRIPT_DIR}/../relayer"
 
 # ---------------------------------------------------------------------------
 # Static analysis: run cargo clippy on the smart contract
@@ -33,6 +34,18 @@ fi
 (cd "${SMARTCONTRACT_DIR}" && cargo clippy -- -D warnings)
 echo "  PASS  cargo clippy passed"
 echo ""
+
+# ---------------------------------------------------------------------------
+# Static analysis: run cargo clippy on the relayer
+# ---------------------------------------------------------------------------
+echo "============================================"
+echo "Running cargo clippy on relayer"
+echo "============================================"
+
+(cd "${RELAYER_DIR}" && cargo clippy -- -D warnings)
+echo "  PASS  cargo clippy passed (relayer)"
+echo ""
+
 CONFIG_FILE="${SCRIPT_DIR}/config/testnet.env"
 CONTRACT_ID=""
 
