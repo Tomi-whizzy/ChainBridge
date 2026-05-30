@@ -85,9 +85,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+          <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden="true" />
         ) : (
-          icon && <span className="shrink-0">{icon}</span>
+          icon && <span className="shrink-0" aria-hidden="true">{icon}</span>
         )}
         {children}
       </button>

@@ -141,7 +141,7 @@ export default function Home() {
 
 function SwapPreviewPanel() {
   return (
-    <Card variant="raised" className="overflow-hidden shadow-glow-sm">
+    <Card variant="raised" className="overflow-hidden">
       <div className="border-b border-border bg-surface-overlay/60 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="h-4 w-4 text-brand-500" />
@@ -156,8 +156,8 @@ function SwapPreviewPanel() {
           <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">From</p>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-full bg-brand-500/20 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-brand-500">XLM</span>
+              <div className="h-7 w-7 rounded-full bg-surface-raised flex items-center justify-center border border-border">
+                <span className="text-[10px] font-bold text-text-primary">XLM</span>
               </div>
               <div>
                 <p className="text-sm font-semibold text-text-primary">Stellar</p>
@@ -238,7 +238,7 @@ function FeatureCard({
   return (
     <Card
       variant="glass"
-      className="p-8 transition-all hover:border-brand-500/50 hover:shadow-glow-sm"
+      className="p-8 transition-all hover:bg-surface-overlay/50 hover:border-border/80"
     >
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-overlay border border-border">
         {icon}
