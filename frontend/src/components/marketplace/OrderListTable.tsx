@@ -240,10 +240,19 @@ export function OrderListTable({
                     <th
                       key={column.key}
                       onClick={() => (isSortable ? onSort(column.sortKey!) : undefined)}
+                      role={isSortable ? "button" : undefined}
+                      tabIndex={isSortable ? 0 : undefined}
+                      aria-sort={isActiveSort ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                      onKeyDown={(e) => {
+                        if (isSortable && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          onSort(column.sortKey!);
+                        }
+                      }}
                       className={cn(
-                        "text-xs font-bold uppercase tracking-wider text-text-muted",
+                        "text-xs font-bold uppercase tracking-wider text-text-muted select-none",
                         column.className,
-                        isSortable && "cursor-pointer hover:text-text-primary transition-colors"
+                        isSortable && "cursor-pointer hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
                       )}
                     >
                       <div className="flex items-center gap-2">

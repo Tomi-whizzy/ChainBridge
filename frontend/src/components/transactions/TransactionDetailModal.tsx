@@ -202,11 +202,11 @@ export function TransactionDetailModal({ tx, onClose, onRetry }: TransactionDeta
               View on Explorer <ExternalLink className="h-4 w-4" />
             </Button>
           </a>
-          <Button variant="secondary" size="icon" className="rounded-xl h-11 w-11 shadow-sm">
-            <Download className="h-5 w-5" />
+          <Button variant="secondary" size="icon" className="rounded-xl h-11 w-11 shadow-sm" aria-label="Download receipt">
+            <Download className="h-5 w-5" aria-hidden="true" />
           </Button>
-          <Button variant="secondary" size="icon" className="rounded-xl h-11 w-11 shadow-sm">
-            <Share2 className="h-5 w-5" />
+          <Button variant="secondary" size="icon" className="rounded-xl h-11 w-11 shadow-sm" aria-label="Share transaction">
+            <Share2 className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
       </Card>
