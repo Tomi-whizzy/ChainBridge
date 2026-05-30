@@ -16,6 +16,23 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SMARTCONTRACT_DIR="${SCRIPT_DIR}/../smartcontract"
+
+# ---------------------------------------------------------------------------
+# Static analysis: run cargo clippy on the smart contract
+# ---------------------------------------------------------------------------
+echo "============================================"
+echo "Running cargo clippy on smartcontract"
+echo "============================================"
+
+if ! command -v cargo &>/dev/null; then
+    echo "ERROR: cargo not found. Install Rust toolchain to run clippy."
+    exit 1
+fi
+
+(cd "${SMARTCONTRACT_DIR}" && cargo clippy -- -D warnings)
+echo "  PASS  cargo clippy passed"
+echo ""
 CONFIG_FILE="${SCRIPT_DIR}/config/testnet.env"
 CONTRACT_ID=""
 

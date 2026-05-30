@@ -1,9 +1,10 @@
 {
   "generators": {
-    "address": 4,
+    "address": 3,
     "nonce": 0
   },
   "auth": [
+    [],
     [],
     [
       [
@@ -12,54 +13,25 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "create_htlc",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                },
-                {
-                  "i128": {
-                    "hi": 0,
-                    "lo": 5000
-                  }
-                },
-                {
-                  "bytes": "84126d0dd850199be29021aadbaee68cb9199047b1cb7ec9894ddb1e3562783c"
-                },
-                {
-                  "u64": 1000100
-                },
-                {
-                  "vec": [
-                    {
-                      "symbol": "None"
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "refund_htlc",
+              "function_name": "add_liquidity",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
                   "u64": 1
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 10000
+                  }
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 20000
+                  }
                 }
               ]
             }
@@ -68,12 +40,13 @@
         }
       ]
     ],
+    [],
     []
   ],
   "ledger": {
     "protocol_version": 21,
     "sequence_number": 0,
-    "timestamp": 1000101,
+    "timestamp": 1000000,
     "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
     "base_reserve": 0,
     "min_persistent_entry_ttl": 4096,
@@ -87,7 +60,7 @@
             "key": {
               "vec": [
                 {
-                  "symbol": "HTLC"
+                  "symbol": "Pool"
                 },
                 {
                   "u64": 1
@@ -107,7 +80,7 @@
                 "key": {
                   "vec": [
                     {
-                      "symbol": "HTLC"
+                      "symbol": "Pool"
                     },
                     {
                       "u64": 1
@@ -119,72 +92,253 @@
                   "map": [
                     {
                       "key": {
-                        "symbol": "amount"
+                        "symbol": "asset_a"
+                      },
+                      "val": {
+                        "string": "XLM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "asset_b"
+                      },
+                      "val": {
+                        "string": "USDC"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "fee_bps"
+                      },
+                      "val": {
+                        "u32": 30
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "id"
+                      },
+                      "val": {
+                        "u64": 1
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "reserve_a"
                       },
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 5000
+                          "lo": 10000
                         }
                       }
                     },
                     {
                       "key": {
-                        "symbol": "created_at"
+                        "symbol": "reserve_b"
                       },
                       "val": {
-                        "u64": 1000000
+                        "i128": {
+                          "hi": 0,
+                          "lo": 20000
+                        }
                       }
                     },
                     {
                       "key": {
-                        "symbol": "hash_algorithm"
+                        "symbol": "reward_bps"
                       },
                       "val": {
-                        "vec": [
-                          {
-                            "symbol": "SHA256"
-                          }
-                        ]
+                        "u32": 500
                       }
                     },
                     {
                       "key": {
-                        "symbol": "hash_lock"
+                        "symbol": "total_lp_tokens"
                       },
                       "val": {
-                        "bytes": "84126d0dd850199be29021aadbaee68cb9199047b1cb7ec9894ddb1e3562783c"
+                        "i128": {
+                          "hi": 0,
+                          "lo": 30000
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "PoolRoute"
+                },
+                {
+                  "string": "USDC"
+                },
+                {
+                  "string": "XLM"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "PoolRoute"
+                    },
+                    {
+                      "string": "USDC"
+                    },
+                    {
+                      "string": "XLM"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "u64": 1
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "PoolRoute"
+                },
+                {
+                  "string": "XLM"
+                },
+                {
+                  "string": "USDC"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "PoolRoute"
+                    },
+                    {
+                      "string": "XLM"
+                    },
+                    {
+                      "string": "USDC"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "u64": 1
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "Position"
+                },
+                {
+                  "u64": 1
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "Position"
+                    },
+                    {
+                      "u64": 1
+                    },
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "lp_tokens"
+                      },
+                      "val": {
+                        "i128": {
+                          "hi": 0,
+                          "lo": 30000
+                        }
                       }
                     },
                     {
                       "key": {
-                        "symbol": "multi_sig"
+                        "symbol": "pool_id"
                       },
                       "val": {
-                        "vec": [
-                          {
-                            "symbol": "None"
-                          }
-                        ]
+                        "u64": 1
                       }
                     },
                     {
                       "key": {
-                        "symbol": "receiver"
-                      },
-                      "val": {
-                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "secret"
-                      },
-                      "val": "void"
-                    },
-                    {
-                      "key": {
-                        "symbol": "sender"
+                        "symbol": "provider"
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
@@ -192,22 +346,13 @@
                     },
                     {
                       "key": {
-                        "symbol": "status"
+                        "symbol": "rewards_earned"
                       },
                       "val": {
-                        "vec": [
-                          {
-                            "symbol": "Refunded"
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "time_lock"
-                      },
-                      "val": {
-                        "u64": 1000100
+                        "i128": {
+                          "hi": 0,
+                          "lo": 1500
+                        }
                       }
                     }
                   ]
@@ -258,7 +403,7 @@
                         "key": {
                           "vec": [
                             {
-                              "symbol": "HTLCCounter"
+                              "symbol": "PoolCounter"
                             }
                           ]
                         },
@@ -298,39 +443,6 @@
                 "key": {
                   "ledger_key_nonce": {
                     "nonce": 801925984706572462
-                  }
-                },
-                "durability": "temporary",
-                "val": "void"
-              }
-            },
-            "ext": "v0"
-          },
-          6311999
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-            "key": {
-              "ledger_key_nonce": {
-                "nonce": 5541220902715666415
-              }
-            },
-            "durability": "temporary"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-                "key": {
-                  "ledger_key_nonce": {
-                    "nonce": 5541220902715666415
                   }
                 },
                 "durability": "temporary",
@@ -428,7 +540,69 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "create_htlc"
+                "symbol": "create_pool"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "string": "XLM"
+                },
+                {
+                  "string": "USDC"
+                },
+                {
+                  "u32": 30
+                },
+                {
+                  "u32": 500
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "create_pool"
+              }
+            ],
+            "data": {
+              "u64": 1
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "add_liquidity"
               }
             ],
             "data": {
@@ -437,186 +611,205 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  "u64": 1
                 },
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 5000
+                    "lo": 10000
                   }
                 },
                 {
-                  "bytes": "84126d0dd850199be29021aadbaee68cb9199047b1cb7ec9894ddb1e3562783c"
+                  "i128": {
+                    "hi": 0,
+                    "lo": 20000
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "add_liquidity"
+              }
+            ],
+            "data": {
+              "i128": {
+                "hi": 0,
+                "lo": 30000
+              }
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "get_pool_quote"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "string": "XLM"
                 },
                 {
-                  "u64": 1000100
+                  "string": "USDC"
                 },
                 {
-                  "vec": [
-                    {
-                      "symbol": "None"
+                  "i128": {
+                    "hi": 0,
+                    "lo": 1000
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "get_pool_quote"
+              }
+            ],
+            "data": {
+              "i128": {
+                "hi": 0,
+                "lo": 1813
+              }
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "get_position"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "u64": 1
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "get_position"
+              }
+            ],
+            "data": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "lp_tokens"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 30000
                     }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "create_htlc"
-              }
-            ],
-            "data": {
-              "u64": 1
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "refund_htlc"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  }
                 },
                 {
-                  "u64": 1
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "contract",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "htlc"
-              },
-              {
-                "symbol": "refunded"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "u64": 1
+                  "key": {
+                    "symbol": "pool_id"
+                  },
+                  "val": {
+                    "u64": 1
+                  }
                 },
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "refund_htlc"
-              }
-            ],
-            "data": "void"
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "get_htlc_status"
-              }
-            ],
-            "data": {
-              "u64": 1
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "get_htlc_status"
-              }
-            ],
-            "data": {
-              "vec": [
+                  "key": {
+                    "symbol": "provider"
+                  },
+                  "val": {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  }
+                },
                 {
-                  "symbol": "Refunded"
+                  "key": {
+                    "symbol": "rewards_earned"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 1500
+                    }
+                  }
                 }
               ]
             }

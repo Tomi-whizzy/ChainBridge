@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::too_many_arguments)]
 
 mod crypto;
 mod error;
@@ -16,8 +17,8 @@ use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, String, V
 
 use crate::error::Error;
 use crate::types::{
-    AdvancedOrderType, Chain, ChainProof, CrossChainSwap, GovernanceConfig, GovernanceProposal,
-    HTLCStatus, HashAlgorithm, LiquidityPool, LiquidityPosition, OrderExecutionCondition,
+    AdvancedOrderConfig, Chain, ChainProof, CrossChainSwap, GovernanceConfig, GovernanceProposal,
+    HTLCStatus, HashAlgorithm, LiquidityPool, LiquidityPosition, OptMultiSig, OptOrderExecution,
     ReferralRecord, StorageMetrics, SwapOrder, VoteChoice, HTLC,
 };
 
@@ -206,9 +207,12 @@ impl ChainBridge {
         storage::get_storage_metrics(&env)
     }
 
-    /// Cleanup expired HTLCs
-    pub fn cleanup_expired_htlcs(env: Env) -> u64 {
-        storage::cleanup_expired_htlcs(&env)
+    /// Cleanup expired HTLCs.
+    ///
+    /// `limit` caps how many entries are removed per call; pass `0` to use the
+    /// default batch size. Returns the number of HTLCs actually cleaned up.
+    pub fn cleanup_expired_htlcs(env: Env, limit: u32) -> u64 {
+        storage::cleanup_expired_htlcs(&env, limit)
     }
 
     /// Mark HTLC for cleanup
@@ -276,12 +280,11 @@ impl ChainBridge {
             to_amount,
             expiry,
             min_fill_amount,
-            AdvancedOrderType::Market,
-            None,
+            crate::types::AdvancedOrderType::Market,
+            OptOrderExecution::None,
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn create_advanced_order(
         env: Env,
         creator: Address,
@@ -292,9 +295,7 @@ impl ChainBridge {
         from_amount: i128,
         to_amount: i128,
         expiry: u64,
-        min_fill_amount: i128,
-        order_type: AdvancedOrderType,
-        execution: Option<OrderExecutionCondition>,
+        config: AdvancedOrderConfig,
     ) -> Result<u64, Error> {
         creator.require_auth();
         order::create_advanced_order(
@@ -307,9 +308,9 @@ impl ChainBridge {
             from_amount,
             to_amount,
             expiry,
-            min_fill_amount,
-            order_type,
-            execution,
+            config.min_fill_amount,
+            config.order_type,
+            config.execution,
         )
     }
 
@@ -344,7 +345,7 @@ impl ChainBridge {
         order_id: u64,
         to_amount: i128,
         expiry: u64,
-        execution: Option<OrderExecutionCondition>,
+        execution: OptOrderExecution,
     ) -> Result<(), Error> {
         creator.require_auth();
         order::amend_order(&env, &creator, order_id, to_amount, expiry, execution)

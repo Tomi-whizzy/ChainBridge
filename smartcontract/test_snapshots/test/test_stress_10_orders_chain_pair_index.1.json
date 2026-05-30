@@ -733,6 +733,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -751,6 +759,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -820,6 +840,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -913,6 +945,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -931,6 +971,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1000,6 +1052,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1093,6 +1157,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -1111,6 +1183,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARQG5"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1180,6 +1264,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1273,6 +1369,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -1291,6 +1395,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATYON"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1360,6 +1476,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1453,6 +1581,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -1471,6 +1607,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAX5"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1540,6 +1688,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1633,6 +1793,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -1651,6 +1819,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI7N"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1720,6 +1900,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1813,6 +2005,14 @@
                   "map": [
                     {
                       "key": {
+                        "symbol": "amendment_count"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": "void"
@@ -1831,6 +2031,18 @@
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYRE5"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "None"
+                          }
+                        ]
                       }
                     },
                     {
@@ -1900,6 +2112,18 @@
                           "hi": 0,
                           "lo": 1000
                         }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Market"
+                          }
+                        ]
                       }
                     },
                     {
@@ -3531,6 +3755,14 @@
               "map": [
                 {
                   "key": {
+                    "symbol": "amendment_count"
+                  },
+                  "val": {
+                    "u32": 0
+                  }
+                },
+                {
+                  "key": {
                     "symbol": "counterparty"
                   },
                   "val": "void"
@@ -3549,6 +3781,18 @@
                   },
                   "val": {
                     "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "execution"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "None"
+                      }
+                    ]
                   }
                 },
                 {
@@ -3618,6 +3862,18 @@
                       "hi": 0,
                       "lo": 1000
                     }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "order_type"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Market"
+                      }
+                    ]
                   }
                 },
                 {
@@ -3769,6 +4025,14 @@
               "map": [
                 {
                   "key": {
+                    "symbol": "amendment_count"
+                  },
+                  "val": {
+                    "u32": 0
+                  }
+                },
+                {
+                  "key": {
                     "symbol": "counterparty"
                   },
                   "val": "void"
@@ -3787,6 +4051,18 @@
                   },
                   "val": {
                     "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "execution"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "None"
+                      }
+                    ]
                   }
                 },
                 {
@@ -3856,6 +4132,18 @@
                       "hi": 0,
                       "lo": 1000
                     }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "order_type"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Market"
+                      }
+                    ]
                   }
                 },
                 {
@@ -4007,6 +4295,14 @@
               "map": [
                 {
                   "key": {
+                    "symbol": "amendment_count"
+                  },
+                  "val": {
+                    "u32": 0
+                  }
+                },
+                {
+                  "key": {
                     "symbol": "counterparty"
                   },
                   "val": "void"
@@ -4025,6 +4321,18 @@
                   },
                   "val": {
                     "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "execution"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "None"
+                      }
+                    ]
                   }
                 },
                 {
@@ -4094,6 +4402,18 @@
                       "hi": 0,
                       "lo": 1000
                     }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "order_type"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Market"
+                      }
+                    ]
                   }
                 },
                 {

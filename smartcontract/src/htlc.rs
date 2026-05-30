@@ -2,7 +2,7 @@ use crate::crypto;
 use crate::error::Error;
 use crate::storage;
 use crate::types::{HTLCStatus, HashAlgorithm, OptMultiSig, HTLC};
-use soroban_sdk::{Address, Bytes, BytesN, Env};
+use soroban_sdk::{symbol_short, Address, Bytes, BytesN, Env};
 
 /// Creates a new HTLC using SHA256 as the hash algorithm (default, Bitcoin-compatible).
 pub fn create_htlc(
@@ -34,6 +34,7 @@ pub fn create_htlc(
 ///
 /// Callers that need Ethereum-compatible swaps should pass `HashAlgorithm::Keccak256`.
 /// The `claim_htlc` call for this HTLC must use the same algorithm.
+#[allow(clippy::too_many_arguments)]
 pub fn create_htlc_with_algorithm(
     env: &Env,
     sender: &Address,
@@ -108,6 +109,11 @@ pub fn claim_htlc(env: &Env, htlc_id: u64, secret: Bytes) -> Result<(), Error> {
     htlc.secret = Some(secret);
     storage::write_htlc(env, htlc_id, &htlc);
 
+    env.events().publish(
+        (symbol_short!("htlc"), symbol_short!("claimed")),
+        (htlc_id, htlc.receiver),
+    );
+
     Ok(())
 }
 
@@ -136,6 +142,11 @@ pub fn refund_htlc(env: &Env, htlc_id: u64, sender: &Address) -> Result<(), Erro
 
     htlc.status = HTLCStatus::Refunded;
     storage::write_htlc(env, htlc_id, &htlc);
+
+    env.events().publish(
+        (symbol_short!("htlc"), symbol_short!("refunded")),
+        (htlc_id, htlc.sender),
+    );
 
     Ok(())
 }

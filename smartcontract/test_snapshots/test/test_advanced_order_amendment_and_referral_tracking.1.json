@@ -12,7 +12,7 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "create_order",
+              "function_name": "create_advanced_order",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
@@ -50,7 +50,88 @@
                   }
                 },
                 {
-                  "u64": 1086400
+                  "u64": 1001000
+                },
+                {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Config"
+                          },
+                          {
+                            "map": [
+                              {
+                                "key": {
+                                  "symbol": "allow_partial_fills"
+                                },
+                                "val": {
+                                  "bool": true
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "execute_after"
+                                },
+                                "val": {
+                                  "u64": 1000000
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "trigger_price_denominator"
+                                },
+                                "val": {
+                                  "i128": {
+                                    "hi": 0,
+                                    "lo": 1
+                                  }
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "trigger_price_numerator"
+                                },
+                                "val": {
+                                  "i128": {
+                                    "hi": 0,
+                                    "lo": 2
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "min_fill_amount"
+                      },
+                      "val": {
+                        "i128": {
+                          "hi": 0,
+                          "lo": 250
+                        }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Limit"
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -61,18 +142,34 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
         {
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "match_order",
+              "function_name": "amend_order",
               "args": [
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
                   "u64": 1
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 2200
+                  }
+                },
+                {
+                  "u64": 1001100
+                },
+                {
+                  "vec": [
+                    {
+                      "symbol": "None"
+                    }
+                  ]
                 }
               ]
             }
@@ -81,6 +178,30 @@
         }
       ]
     ],
+    [],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "register_referral_code",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                },
+                {
+                  "string": "FROST"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [],
     []
   ],
   "ledger": {
@@ -129,7 +250,11 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "vec": []
+                  "vec": [
+                    {
+                      "u64": 1
+                    }
+                  ]
                 }
               }
             },
@@ -180,16 +305,14 @@
                         "symbol": "amendment_count"
                       },
                       "val": {
-                        "u32": 0
+                        "u32": 1
                       }
                     },
                     {
                       "key": {
                         "symbol": "counterparty"
                       },
-                      "val": {
-                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                      }
+                      "val": "void"
                     },
                     {
                       "key": {
@@ -224,7 +347,7 @@
                         "symbol": "expiry"
                       },
                       "val": {
-                        "u64": 1086400
+                        "u64": 1001100
                       }
                     },
                     {
@@ -234,7 +357,7 @@
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 1000
+                          "lo": 0
                         }
                       }
                     },
@@ -284,7 +407,7 @@
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 1000
+                          "lo": 250
                         }
                       }
                     },
@@ -295,7 +418,7 @@
                       "val": {
                         "vec": [
                           {
-                            "symbol": "Market"
+                            "symbol": "Limit"
                           }
                         ]
                       }
@@ -307,7 +430,7 @@
                       "val": {
                         "vec": [
                           {
-                            "symbol": "Completed"
+                            "symbol": "Open"
                           }
                         ]
                       }
@@ -319,7 +442,7 @@
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 2000
+                          "lo": 2200
                         }
                       }
                     },
@@ -359,10 +482,10 @@
             "key": {
               "vec": [
                 {
-                  "symbol": "Swap"
+                  "symbol": "ReferralCode"
                 },
                 {
-                  "u64": 1
+                  "string": "FROST"
                 }
               ]
             },
@@ -379,10 +502,10 @@
                 "key": {
                   "vec": [
                     {
-                      "symbol": "Swap"
+                      "symbol": "ReferralCode"
                     },
                     {
-                      "u64": 1
+                      "string": "FROST"
                     }
                   ]
                 },
@@ -391,63 +514,23 @@
                   "map": [
                     {
                       "key": {
-                        "symbol": "id"
+                        "symbol": "code"
                       },
                       "val": {
-                        "u64": 1
+                        "string": "FROST"
                       }
                     },
                     {
                       "key": {
-                        "symbol": "other_chain"
+                        "symbol": "last_swap_id"
                       },
                       "val": {
-                        "vec": [
-                          {
-                            "symbol": "Bitcoin"
-                          }
-                        ]
+                        "u64": 77
                       }
                     },
                     {
                       "key": {
-                        "symbol": "other_chain_tx"
-                      },
-                      "val": {
-                        "string": ""
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "other_party"
-                      },
-                      "val": {
-                        "string": ""
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "state"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Initiated"
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "stellar_htlc_id"
-                      },
-                      "val": {
-                        "u64": 0
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "stellar_party"
+                        "symbol": "owner"
                       },
                       "val": {
                         "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
@@ -455,10 +538,21 @@
                     },
                     {
                       "key": {
-                        "symbol": "updated_at"
+                        "symbol": "rewards_earned"
                       },
                       "val": {
-                        "u64": 1000000
+                        "i128": {
+                          "hi": 0,
+                          "lo": 100
+                        }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "uses"
+                      },
+                      "val": {
+                        "u64": 1
                       }
                     }
                   ]
@@ -516,18 +610,6 @@
                         "val": {
                           "u64": 1
                         }
-                      },
-                      {
-                        "key": {
-                          "vec": [
-                            {
-                              "symbol": "SwapCounter"
-                            }
-                          ]
-                        },
-                        "val": {
-                          "u64": 1
-                        }
                       }
                     ]
                   }
@@ -575,7 +657,7 @@
       [
         {
           "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
             "key": {
               "ledger_key_nonce": {
                 "nonce": 5541220902715666415
@@ -590,10 +672,43 @@
             "data": {
               "contract_data": {
                 "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
                 "key": {
                   "ledger_key_nonce": {
                     "nonce": 5541220902715666415
+                  }
+                },
+                "durability": "temporary",
+                "val": "void"
+              }
+            },
+            "ext": "v0"
+          },
+          6311999
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+            "key": {
+              "ledger_key_nonce": {
+                "nonce": 1033654523790656264
+              }
+            },
+            "durability": "temporary"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+                "key": {
+                  "ledger_key_nonce": {
+                    "nonce": 1033654523790656264
                   }
                 },
                 "durability": "temporary",
@@ -691,7 +806,7 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "create_order"
+                "symbol": "create_advanced_order"
               }
             ],
             "data": {
@@ -732,7 +847,88 @@
                   }
                 },
                 {
-                  "u64": 1086400
+                  "u64": 1001000
+                },
+                {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "execution"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Config"
+                          },
+                          {
+                            "map": [
+                              {
+                                "key": {
+                                  "symbol": "allow_partial_fills"
+                                },
+                                "val": {
+                                  "bool": true
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "execute_after"
+                                },
+                                "val": {
+                                  "u64": 1000000
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "trigger_price_denominator"
+                                },
+                                "val": {
+                                  "i128": {
+                                    "hi": 0,
+                                    "lo": 1
+                                  }
+                                }
+                              },
+                              {
+                                "key": {
+                                  "symbol": "trigger_price_numerator"
+                                },
+                                "val": {
+                                  "i128": {
+                                    "hi": 0,
+                                    "lo": 2
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "min_fill_amount"
+                      },
+                      "val": {
+                        "i128": {
+                          "hi": 0,
+                          "lo": 250
+                        }
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "order_type"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "Limit"
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -753,7 +949,7 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "create_order"
+                "symbol": "create_advanced_order"
               }
             ],
             "data": {
@@ -779,7 +975,293 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "match_order"
+                "symbol": "amend_order"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                },
+                {
+                  "u64": 1
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 2200
+                  }
+                },
+                {
+                  "u64": 1001100
+                },
+                {
+                  "vec": [
+                    {
+                      "symbol": "None"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "amend_order"
+              }
+            ],
+            "data": "void"
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "get_order"
+              }
+            ],
+            "data": {
+              "u64": 1
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "get_order"
+              }
+            ],
+            "data": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "amendment_count"
+                  },
+                  "val": {
+                    "u32": 1
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "counterparty"
+                  },
+                  "val": "void"
+                },
+                {
+                  "key": {
+                    "symbol": "created_ledger"
+                  },
+                  "val": {
+                    "u32": 0
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "creator"
+                  },
+                  "val": {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "execution"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "None"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "expiry"
+                  },
+                  "val": {
+                    "u64": 1001100
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "filled_amount"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 0
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "from_amount"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 1000
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "from_asset"
+                  },
+                  "val": {
+                    "string": "BTC"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "from_chain"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Bitcoin"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "id"
+                  },
+                  "val": {
+                    "u64": 1
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "min_fill_amount"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 250
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "order_type"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Limit"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "status"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Open"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "to_amount"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 2200
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "to_asset"
+                  },
+                  "val": {
+                    "string": "ETH"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "to_chain"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Ethereum"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "register_referral_code"
               }
             ],
             "data": {
@@ -788,7 +1270,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 },
                 {
-                  "u64": 1
+                  "string": "FROST"
                 }
               ]
             }
@@ -809,12 +1291,10 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "match_order"
+                "symbol": "register_referral_code"
               }
             ],
-            "data": {
-              "u64": 1
-            }
+            "data": "void"
           }
         }
       },
@@ -835,24 +1315,22 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "get_orders_by_chain_pair"
+                "symbol": "record_referral_swap"
               }
             ],
             "data": {
               "vec": [
                 {
-                  "vec": [
-                    {
-                      "symbol": "Bitcoin"
-                    }
-                  ]
+                  "string": "FROST"
                 },
                 {
-                  "vec": [
-                    {
-                      "symbol": "Ethereum"
-                    }
-                  ]
+                  "u64": 77
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 10000
+                  }
                 }
               ]
             }
@@ -873,11 +1351,102 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "get_orders_by_chain_pair"
+                "symbol": "record_referral_swap"
+              }
+            ],
+            "data": "void"
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "get_referral_record"
               }
             ],
             "data": {
-              "vec": []
+              "string": "FROST"
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "get_referral_record"
+              }
+            ],
+            "data": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "code"
+                  },
+                  "val": {
+                    "string": "FROST"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "last_swap_id"
+                  },
+                  "val": {
+                    "u64": 77
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "owner"
+                  },
+                  "val": {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "rewards_earned"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 100
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "uses"
+                  },
+                  "val": {
+                    "u64": 1
+                  }
+                }
+              ]
             }
           }
         }

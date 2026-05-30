@@ -35,6 +35,8 @@ pub enum DataKey {
     Swap(u64),
     SupportedChain(u32),
     ExpiredHTLCs,
+    /// Read pointer: the next queue index to process in cleanup_expired_htlcs.
+    ExpiredHTLCHead,
     ExpiredHTLCQueue(u64),
     StorageMetrics,
     Paused,
@@ -149,6 +151,7 @@ pub fn write_proposal_vote(env: &Env, proposal_id: u64, voter: &Address, voted: 
         .set(&DataKey::ProposalVote(proposal_id, voter.clone()), &voted);
 }
 
+#[allow(dead_code)]
 pub fn read_delegation(env: &Env, delegator: &Address) -> Option<DelegationRecord> {
     env.storage()
         .persistent()
@@ -374,6 +377,7 @@ pub fn get_orders_by_chain_pair(env: &Env, from: &Chain, to: &Chain) -> Vec<u64>
 // Expired HTLC cleanup queue
 // =============================================================================
 
+/// Append an HTLC id to the expired-cleanup queue.
 pub fn add_expired_htlc(env: &Env, htlc_id: u64) {
     let counter = get_expired_htlc_counter(env);
     env.storage()
@@ -382,6 +386,7 @@ pub fn add_expired_htlc(env: &Env, htlc_id: u64) {
     set_expired_htlc_counter(env, counter + 1);
 }
 
+/// Write pointer: total number of entries ever enqueued.
 pub fn get_expired_htlc_counter(env: &Env) -> u64 {
     env.storage()
         .instance()
@@ -391,6 +396,20 @@ pub fn get_expired_htlc_counter(env: &Env) -> u64 {
 
 pub fn set_expired_htlc_counter(env: &Env, count: u64) {
     env.storage().instance().set(&DataKey::ExpiredHTLCs, &count);
+}
+
+/// Read pointer: the next queue index to process in cleanup_expired_htlcs.
+pub fn get_expired_htlc_head(env: &Env) -> u64 {
+    env.storage()
+        .instance()
+        .get(&DataKey::ExpiredHTLCHead)
+        .unwrap_or(0)
+}
+
+fn set_expired_htlc_head(env: &Env, head: u64) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ExpiredHTLCHead, &head);
 }
 
 pub fn get_expired_htlc(env: &Env, index: u64) -> Option<u64> {
@@ -405,17 +424,32 @@ pub fn remove_expired_htlc(env: &Env, index: u64) {
         .remove(&DataKey::ExpiredHTLCQueue(index));
 }
 
-pub fn cleanup_expired_htlcs(env: &Env) -> u64 {
-    let counter = get_expired_htlc_counter(env);
-    let mut cleaned = 0u64;
+/// Process expired HTLCs from the cleanup queue.
+///
+/// Uses a persistent read pointer so successive calls resume where the
+/// previous call left off, enabling partial cleanup over multiple calls.
+/// `limit` caps how many entries are removed per call; pass `0` to use the
+/// default batch size (`CLEANUP_BATCH_SIZE`). Returns the number of HTLCs
+/// actually removed.
+pub fn cleanup_expired_htlcs(env: &Env, limit: u32) -> u64 {
+    let write_counter = get_expired_htlc_counter(env);
+    let head = get_expired_htlc_head(env);
 
-    let batch_end = if counter > CLEANUP_BATCH_SIZE {
+    if head >= write_counter {
+        return 0;
+    }
+
+    let effective_limit = if limit == 0 {
         CLEANUP_BATCH_SIZE
     } else {
-        counter
+        limit as u64
     };
 
-    for i in 0..batch_end {
+    let pending = write_counter - head;
+    let batch_size = pending.min(effective_limit);
+    let mut cleaned = 0u64;
+
+    for i in head..head + batch_size {
         if let Some(htlc_id) = get_expired_htlc(env, i) {
             remove_htlc(env, htlc_id);
             remove_expired_htlc(env, i);
@@ -424,8 +458,7 @@ pub fn cleanup_expired_htlcs(env: &Env) -> u64 {
     }
 
     if cleaned > 0 {
-        let remaining = counter.saturating_sub(cleaned);
-        set_expired_htlc_counter(env, remaining);
+        set_expired_htlc_head(env, head + cleaned);
     }
 
     cleaned
