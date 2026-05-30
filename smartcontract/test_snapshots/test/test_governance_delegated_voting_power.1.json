@@ -35,7 +35,7 @@
                         "symbol": "quorum_bps"
                       },
                       "val": {
-                        "u32": 2000
+                        "u32": 1000
                       }
                     },
                     {
@@ -97,7 +97,7 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 500
+                    "lo": 300
                   }
                 }
               ]
@@ -122,7 +122,7 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 2000
+                    "lo": 200
                   }
                 }
               ]
@@ -139,16 +139,63 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "create_proposal",
+              "function_name": "delegate_votes",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "string": "Lower protocol fee"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "set_voting_stake",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 },
                 {
-                  "string": "Reduce taker fees via governance"
+                  "i128": {
+                    "hi": 0,
+                    "lo": 200
+                  }
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "create_proposal",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                },
+                {
+                  "string": "Delegated vote test"
+                },
+                {
+                  "string": "Verify delegated voting power"
                 },
                 {
                   "vec": [
@@ -164,6 +211,7 @@
         }
       ]
     ],
+    [],
     [
       [
         "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
@@ -192,21 +240,137 @@
           "sub_invocations": []
         }
       ]
-    ],
-    [],
-    [],
-    []
+    ]
   ],
   "ledger": {
     "protocol_version": 21,
     "sequence_number": 0,
-    "timestamp": 1000120,
+    "timestamp": 1000000,
     "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
     "base_reserve": 0,
     "min_persistent_entry_ttl": 4096,
     "min_temp_entry_ttl": 16,
     "max_entry_ttl": 6312000,
     "ledger_entries": [
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "DelegateeDelegators"
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "DelegateeDelegators"
+                    },
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "vec": [
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "Delegation"
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "Delegation"
+                    },
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "delegatee"
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "delegator"
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "updated_at"
+                      },
+                      "val": {
+                        "u64": 1000000
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          4095
+        ]
+      ],
       [
         {
           "contract_data": {
@@ -291,7 +455,7 @@
                         "symbol": "description"
                       },
                       "val": {
-                        "string": "Reduce taker fees via governance"
+                        "string": "Verify delegated voting power"
                       }
                     },
                     {
@@ -309,7 +473,7 @@
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 2000
+                          "lo": 500
                         }
                       }
                     },
@@ -326,7 +490,7 @@
                         "symbol": "proposer"
                       },
                       "val": {
-                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                       }
                     },
                     {
@@ -336,7 +500,7 @@
                       "val": {
                         "vec": [
                           {
-                            "symbol": "Executed"
+                            "symbol": "Active"
                           }
                         ]
                       }
@@ -346,7 +510,7 @@
                         "symbol": "title"
                       },
                       "val": {
-                        "string": "Lower protocol fee"
+                        "string": "Delegated vote test"
                       }
                     },
                     {
@@ -473,220 +637,6 @@
             "key": {
               "vec": [
                 {
-                  "symbol": "ProposalLifecycle"
-                },
-                {
-                  "u64": 1
-                },
-                {
-                  "u64": 2
-                }
-              ]
-            },
-            "durability": "persistent"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-                "key": {
-                  "vec": [
-                    {
-                      "symbol": "ProposalLifecycle"
-                    },
-                    {
-                      "u64": 1
-                    },
-                    {
-                      "u64": 2
-                    }
-                  ]
-                },
-                "durability": "persistent",
-                "val": {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "detail"
-                      },
-                      "val": {
-                        "string": "voting_finalized"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "from_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Status"
-                          },
-                          {
-                            "vec": [
-                              {
-                                "symbol": "Active"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "occurred_at"
-                      },
-                      "val": {
-                        "u64": 1000120
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "sequence"
-                      },
-                      "val": {
-                        "u64": 2
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "to_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Succeeded"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            "ext": "v0"
-          },
-          4095
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-            "key": {
-              "vec": [
-                {
-                  "symbol": "ProposalLifecycle"
-                },
-                {
-                  "u64": 1
-                },
-                {
-                  "u64": 3
-                }
-              ]
-            },
-            "durability": "persistent"
-          }
-        },
-        [
-          {
-            "last_modified_ledger_seq": 0,
-            "data": {
-              "contract_data": {
-                "ext": "v0",
-                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-                "key": {
-                  "vec": [
-                    {
-                      "symbol": "ProposalLifecycle"
-                    },
-                    {
-                      "u64": 1
-                    },
-                    {
-                      "u64": 3
-                    }
-                  ]
-                },
-                "durability": "persistent",
-                "val": {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "detail"
-                      },
-                      "val": {
-                        "string": "proposal_executed"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "from_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Status"
-                          },
-                          {
-                            "vec": [
-                              {
-                                "symbol": "Succeeded"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "occurred_at"
-                      },
-                      "val": {
-                        "u64": 1000120
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "sequence"
-                      },
-                      "val": {
-                        "u64": 3
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "to_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Executed"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            },
-            "ext": "v0"
-          },
-          4095
-        ]
-      ],
-      [
-        {
-          "contract_data": {
-            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-            "key": {
-              "vec": [
-                {
                   "symbol": "ProposalLifecycleCount"
                 },
                 {
@@ -716,7 +666,7 @@
                 },
                 "durability": "persistent",
                 "val": {
-                  "u64": 3
+                  "u64": 1
                 }
               }
             },
@@ -814,7 +764,7 @@
                 "val": {
                   "i128": {
                     "hi": 0,
-                    "lo": 500
+                    "lo": 300
                   }
                 }
               }
@@ -862,7 +812,7 @@
                 "val": {
                   "i128": {
                     "hi": 0,
-                    "lo": 2000
+                    "lo": 200
                   }
                 }
               }
@@ -933,7 +883,7 @@
                                 "symbol": "quorum_bps"
                               },
                               "val": {
-                                "u32": 2000
+                                "u32": 1000
                               }
                             },
                             {
@@ -1163,6 +1113,72 @@
       ],
       [
         {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+            "key": {
+              "ledger_key_nonce": {
+                "nonce": 4270020994084947596
+              }
+            },
+            "durability": "temporary"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+                "key": {
+                  "ledger_key_nonce": {
+                    "nonce": 4270020994084947596
+                  }
+                },
+                "durability": "temporary",
+                "val": "void"
+              }
+            },
+            "ext": "v0"
+          },
+          6311999
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+            "key": {
+              "ledger_key_nonce": {
+                "nonce": 8370022561469687789
+              }
+            },
+            "durability": "temporary"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+                "key": {
+                  "ledger_key_nonce": {
+                    "nonce": 8370022561469687789
+                  }
+                },
+                "durability": "temporary",
+                "val": "void"
+              }
+            },
+            "ext": "v0"
+          },
+          6311999
+        ]
+      ],
+      [
+        {
           "contract_code": {
             "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           }
@@ -1273,7 +1289,7 @@
                         "symbol": "quorum_bps"
                       },
                       "val": {
-                        "u32": 2000
+                        "u32": 1000
                       }
                     },
                     {
@@ -1367,7 +1383,7 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 500
+                    "lo": 300
                   }
                 }
               ]
@@ -1424,7 +1440,118 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 2000
+                    "lo": 200
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "set_voting_stake"
+              }
+            ],
+            "data": "void"
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "delegate_votes"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "delegate_votes"
+              }
+            ],
+            "data": "void"
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "set_voting_stake"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 200
                   }
                 }
               ]
@@ -1476,13 +1603,13 @@
             "data": {
               "vec": [
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 },
                 {
-                  "string": "Lower protocol fee"
+                  "string": "Delegated vote test"
                 },
                 {
-                  "string": "Reduce taker fees via governance"
+                  "string": "Verify delegated voting power"
                 },
                 {
                   "vec": [
@@ -1515,6 +1642,65 @@
             ],
             "data": {
               "u64": 1
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "get_voting_power"
+              }
+            ],
+            "data": {
+              "vec": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                },
+                {
+                  "u64": 1
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "get_voting_power"
+              }
+            ],
+            "data": {
+              "i128": {
+                "hi": 0,
+                "lo": 500
+              }
             }
           }
         }
@@ -1579,438 +1765,8 @@
             "data": {
               "i128": {
                 "hi": 0,
-                "lo": 2000
+                "lo": 500
               }
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "execute_proposal"
-              }
-            ],
-            "data": {
-              "u64": 1
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "execute_proposal"
-              }
-            ],
-            "data": "void"
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "get_proposal"
-              }
-            ],
-            "data": {
-              "u64": 1
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "get_proposal"
-              }
-            ],
-            "data": {
-              "map": [
-                {
-                  "key": {
-                    "symbol": "abstain_votes"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 0
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "actions"
-                  },
-                  "val": {
-                    "vec": [
-                      {
-                        "string": "set_fee_rate:25"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "against_votes"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 0
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "created_at"
-                  },
-                  "val": {
-                    "u64": 1000000
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "description"
-                  },
-                  "val": {
-                    "string": "Reduce taker fees via governance"
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "executable_after"
-                  },
-                  "val": {
-                    "u64": 1000110
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "for_votes"
-                  },
-                  "val": {
-                    "i128": {
-                      "hi": 0,
-                      "lo": 2000
-                    }
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "id"
-                  },
-                  "val": {
-                    "u64": 1
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "proposer"
-                  },
-                  "val": {
-                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "status"
-                  },
-                  "val": {
-                    "vec": [
-                      {
-                        "symbol": "Executed"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "title"
-                  },
-                  "val": {
-                    "string": "Lower protocol fee"
-                  }
-                },
-                {
-                  "key": {
-                    "symbol": "voting_ends_at"
-                  },
-                  "val": {
-                    "u64": 1000100
-                  }
-                }
-              ]
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "get_proposal_lifecycle"
-              }
-            ],
-            "data": {
-              "u64": 1
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "get_proposal_lifecycle"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "detail"
-                      },
-                      "val": {
-                        "string": "proposal_created"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "from_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "None"
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "occurred_at"
-                      },
-                      "val": {
-                        "u64": 1000000
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "sequence"
-                      },
-                      "val": {
-                        "u64": 1
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "to_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Active"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                },
-                {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "detail"
-                      },
-                      "val": {
-                        "string": "voting_finalized"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "from_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Status"
-                          },
-                          {
-                            "vec": [
-                              {
-                                "symbol": "Active"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "occurred_at"
-                      },
-                      "val": {
-                        "u64": 1000120
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "sequence"
-                      },
-                      "val": {
-                        "u64": 2
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "to_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Succeeded"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                },
-                {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "detail"
-                      },
-                      "val": {
-                        "string": "proposal_executed"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "from_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Status"
-                          },
-                          {
-                            "vec": [
-                              {
-                                "symbol": "Succeeded"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "occurred_at"
-                      },
-                      "val": {
-                        "u64": 1000120
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "sequence"
-                      },
-                      "val": {
-                        "u64": 3
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "to_status"
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "symbol": "Executed"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
             }
           }
         }

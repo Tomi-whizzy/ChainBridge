@@ -144,9 +144,18 @@ export interface GovernanceProposal {
   id: string;
   title: string;
   proposer: string;
-  status: "active" | "succeeded" | "executed" | "defeated";
+  status: "active" | "succeeded" | "executed" | "defeated" | "cancelled";
   participation: string;
   executableAt: string;
+  lifecycle?: ProposalLifecycleEvent[];
+}
+
+export interface ProposalLifecycleEvent {
+  sequence: number;
+  from_status?: string | null;
+  to_status: string;
+  occurred_at: string;
+  detail: string;
 }
 
 export interface LiquidityPool {
@@ -163,6 +172,11 @@ export interface ReferralCampaign {
   referrals: number;
   rewards: string;
   conversionRate: string;
+  rewardsPending?: string;
+  rewardsSettled?: string;
+  rewardsClaimed?: string;
+  shareUrl?: string;
+  qrImageBase64?: string;
 }
 
 // Timelock validation types (#56)

@@ -203,8 +203,26 @@ pub struct GovernanceConfig {
     pub token_symbol: String,
     pub quorum_bps: u32,
     pub proposal_threshold: i128,
+    pub total_voting_supply: i128,
     pub voting_period_secs: u64,
     pub timelock_secs: u64,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum OptProposalStatus {
+    None,
+    Status(ProposalStatus),
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProposalLifecycleEvent {
+    pub sequence: u64,
+    pub from_status: OptProposalStatus,
+    pub to_status: ProposalStatus,
+    pub occurred_at: u64,
+    pub detail: String,
 }
 
 #[contracttype]
@@ -274,10 +292,44 @@ pub struct LiquidityPosition {
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ReferralRewardStatus {
+    Pending,
+    Settled,
+    Claimed,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ReferralRewardEntry {
+    pub id: u64,
+    pub code: String,
+    pub swap_id: u64,
+    pub amount: i128,
+    pub status: ReferralRewardStatus,
+    pub created_at: u64,
+    pub settled_at: u64,
+    pub claimed_at: u64,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ReferralSharePayload {
+    pub code: String,
+    pub owner: Address,
+    pub qr_content: String,
+    pub share_url: String,
+    pub created_at: u64,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReferralRecord {
     pub owner: Address,
     pub code: String,
     pub uses: u64,
     pub rewards_earned: i128,
+    pub rewards_pending: i128,
+    pub rewards_settled: i128,
+    pub rewards_claimed: i128,
     pub last_swap_id: u64,
 }

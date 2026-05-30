@@ -1,38 +1,11 @@
 "use client";
 
 import { Badge, Button, Card, CardContent, CardHeader } from "@/components/ui";
-import type { GovernanceProposal, LiquidityPool, ReferralCampaign } from "@/types";
+import { ActivityTimeline, type ActivityTimelineEvent } from "@/components/timeline/ActivityTimeline";
+import { listGovernanceProposals, listReferralCampaigns } from "@/lib/api/protocol";
+import type { GovernanceProposal, ReferralCampaign } from "@/types";
 import { Coins, Gauge, GitBranchPlus, Share2, Vote } from "lucide-react";
-import type { ReactNode } from "react";
-
-const PROPOSALS: GovernanceProposal[] = [
-  {
-    id: "GP-80",
-    title: "Move protocol parameters under DAO control",
-    proposer: "0x8e4a...1f19",
-    status: "active",
-    participation: "24.8%",
-    executableAt: "In 2 days",
-  },
-  {
-    id: "GP-81",
-    title: "Lower routing fee for deep pools",
-    proposer: "0x4bd2...98c1",
-    status: "succeeded",
-    participation: "38.2%",
-    executableAt: "Queued",
-  },
-];
-
-const POOLS: LiquidityPool[] = [
-  { id: "1", pair: "XLM/USDC", tvl: "$1.24M", apr: "14.2%", feeTier: "0.30%", utilization: "68%" },
-  { id: "2", pair: "BTC/ETH", tvl: "$860K", apr: "17.8%", feeTier: "0.50%", utilization: "54%" },
-];
-
-const REFERRALS: ReferralCampaign[] = [
-  { code: "FROST", referrals: 18, rewards: "$412", conversionRate: "22%" },
-  { code: "BRIDGEUP", referrals: 9, rewards: "$177", conversionRate: "16%" },
-];
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 const ORDER_MODES = [
   "Limit orders with conditional execution",
@@ -41,21 +14,112 @@ const ORDER_MODES = [
   "Expiry windows and stop-loss triggers",
 ];
 
+const FALLBACK_PROPOSALS: GovernanceProposal[] = [
+  {
+    id: "GP-80",
+    title: "Move protocol parameters under DAO control",
+    proposer: "0x8e4a...1f19",
+    status: "active",
+    participation: "24.8%",
+    executableAt: "In 2 days",
+    lifecycle: [
+      {
+        sequence: 1,
+        to_status: "active",
+        occurred_at: new Date().toISOString(),
+        detail: "proposal_created",
+      },
+    ],
+  },
+];
+
+const FALLBACK_REFERRALS: ReferralCampaign[] = [
+  {
+    code: "FROST",
+    referrals: 18,
+    rewards: "$412",
+    conversionRate: "22%",
+    rewardsPending: "$120",
+    rewardsSettled: "$177",
+    rewardsClaimed: "$115",
+  },
+];
+
+function lifecycleToTimeline(proposal: GovernanceProposal): ActivityTimelineEvent[] {
+  return (proposal.lifecycle ?? []).map((event) => ({
+    id: `${proposal.id}-${event.sequence}`,
+    label: event.detail.replaceAll("_", " "),
+    timestamp: event.occurred_at,
+    status: event.to_status === "defeated" ? "failed" : "confirmed",
+    description: event.from_status
+      ? `${event.from_status} → ${event.to_status}`
+      : `Status: ${event.to_status}`,
+  }));
+}
+
 export default function ProtocolPage() {
+  const [proposals, setProposals] = useState<GovernanceProposal[]>(FALLBACK_PROPOSALS);
+  const [referrals, setReferrals] = useState<ReferralCampaign[]>(FALLBACK_REFERRALS);
+  const [selectedProposalId, setSelectedProposalId] = useState<string>(FALLBACK_PROPOSALS[0]?.id ?? "");
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProtocolData() {
+      try {
+        const [proposalData, referralData] = await Promise.all([
+          listGovernanceProposals(),
+          listReferralCampaigns(),
+        ]);
+        if (!active) return;
+        if (proposalData.length) {
+          setProposals(proposalData);
+          setSelectedProposalId(proposalData[0].id);
+        }
+        if (referralData.length) {
+          setReferrals(referralData);
+        }
+        setLoadError(null);
+      } catch {
+        if (active) {
+          setLoadError("Showing cached protocol data while the API is unavailable.");
+        }
+      }
+    }
+
+    void loadProtocolData();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const selectedProposal = useMemo(
+    () => proposals.find((proposal) => proposal.id === selectedProposalId) ?? proposals[0],
+    [proposals, selectedProposalId]
+  );
+
+  const activeProposals = proposals.filter((proposal) => proposal.status === "active").length;
+  const referralRevenue = referrals.reduce((sum, campaign) => {
+    const numeric = Number(campaign.rewards.replace(/[^\d]/g, ""));
+    return sum + (Number.isFinite(numeric) ? numeric : 0);
+  }, 0);
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-10 md:py-16">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <Badge variant="info" className="mb-3">
-            Roadmap Foundations
+            Protocol Workspace
           </Badge>
           <h1 className="text-3xl font-bold text-text-primary md:text-5xl">
             Protocol Control Room
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-text-secondary md:text-base">
-            Governance, liquidity routing, advanced order controls, and referral growth surfaces in
-            a single operator view.
+            Governance lifecycle history, referral settlement tracking, and shareable onboarding
+            payloads in one operator view.
           </p>
+          {loadError && <p className="mt-2 text-sm text-amber-400">{loadError}</p>}
         </div>
         <div className="flex gap-3">
           <Button className="rounded-xl">Launch Governance</Button>
@@ -69,8 +133,8 @@ export default function ProtocolPage() {
         <MetricCard
           icon={<Vote className="h-5 w-5" />}
           label="Active Proposals"
-          value="2"
-          detail="1 queued for execution"
+          value={String(activeProposals)}
+          detail={`${proposals.length} tracked proposals`}
         />
         <MetricCard
           icon={<Coins className="h-5 w-5" />}
@@ -87,8 +151,8 @@ export default function ProtocolPage() {
         <MetricCard
           icon={<Share2 className="h-5 w-5" />}
           label="Referral Revenue"
-          value="$589"
-          detail="This epoch from tracked swaps"
+          value={`$${referralRevenue}`}
+          detail="Tracked pending, settled, and claimed"
         />
       </div>
 
@@ -98,16 +162,18 @@ export default function ProtocolPage() {
             <div>
               <h2 className="text-xl font-semibold text-text-primary">Governance Queue</h2>
               <p className="text-sm text-text-secondary">
-                Token holders can propose, delegate, vote, and execute passed changes.
+                Proposal status transitions are persisted and exposed through the protocol API.
               </p>
             </div>
             <Badge variant="success">DAO Ready</Badge>
           </CardHeader>
           <CardContent className="space-y-4">
-            {PROPOSALS.map((proposal) => (
-              <div
+            {proposals.map((proposal) => (
+              <button
                 key={proposal.id}
-                className="rounded-2xl border border-border bg-surface-overlay/40 p-4"
+                type="button"
+                onClick={() => setSelectedProposalId(proposal.id)}
+                className="w-full rounded-2xl border border-border bg-surface-overlay/40 p-4 text-left transition hover:border-brand-500/40"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -124,8 +190,16 @@ export default function ProtocolPage() {
                   <span>Participation: {proposal.participation}</span>
                   <span>Execution: {proposal.executableAt}</span>
                 </div>
-              </div>
+              </button>
             ))}
+
+            {selectedProposal && (
+              <ActivityTimeline
+                title="Proposal Lifecycle"
+                events={lifecycleToTimeline(selectedProposal)}
+                emptyMessage="No lifecycle events recorded yet."
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -161,18 +235,13 @@ export default function ProtocolPage() {
             <Gauge className="h-5 w-5 text-brand-500" />
           </CardHeader>
           <CardContent className="space-y-3">
-            {POOLS.map((pool) => (
-              <div
-                key={pool.id}
-                className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-surface-overlay/40 p-4 text-sm md:grid-cols-5"
-              >
-                <span className="font-semibold text-text-primary">{pool.pair}</span>
-                <span className="text-text-secondary">TVL {pool.tvl}</span>
-                <span className="text-text-secondary">APR {pool.apr}</span>
-                <span className="text-text-secondary">Fee {pool.feeTier}</span>
-                <span className="text-text-secondary">Utilization {pool.utilization}</span>
-              </div>
-            ))}
+            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-surface-overlay/40 p-4 text-sm md:grid-cols-5">
+              <span className="font-semibold text-text-primary">XLM/USDC</span>
+              <span className="text-text-secondary">TVL $1.24M</span>
+              <span className="text-text-secondary">APR 14.2%</span>
+              <span className="text-text-secondary">Fee 0.30%</span>
+              <span className="text-text-secondary">Utilization 68%</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -180,25 +249,50 @@ export default function ProtocolPage() {
           <CardHeader>
             <h2 className="text-xl font-semibold text-text-primary">Referral Analytics</h2>
             <p className="text-sm text-text-secondary">
-              Shareable swap links, tracked conversions, and reward visibility for growth loops.
+              QR-friendly share payloads, settlement status, and fallback links for onboarding.
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
-            {REFERRALS.map((campaign) => (
+            {referrals.map((campaign) => (
               <div
                 key={campaign.code}
-                className="flex items-center justify-between rounded-2xl border border-border bg-background/50 px-4 py-4"
+                className="rounded-2xl border border-border bg-background/50 px-4 py-4"
               >
-                <div>
-                  <p className="font-semibold text-text-primary">{campaign.code}</p>
-                  <p className="text-xs text-text-muted">
-                    {campaign.referrals} successful referrals
-                  </p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-semibold text-text-primary">{campaign.code}</p>
+                    <p className="text-xs text-text-muted">
+                      {campaign.referrals} successful referrals
+                    </p>
+                    <div className="mt-2 grid gap-1 text-xs text-text-secondary">
+                      <span>Pending: {campaign.rewardsPending ?? "—"}</span>
+                      <span>Settled: {campaign.rewardsSettled ?? "—"}</span>
+                      <span>Claimed: {campaign.rewardsClaimed ?? "—"}</span>
+                    </div>
+                  </div>
+                  <div className="text-right text-sm text-text-secondary">
+                    <p>{campaign.rewards}</p>
+                    <p>{campaign.conversionRate} conversion</p>
+                  </div>
                 </div>
-                <div className="text-right text-sm text-text-secondary">
-                  <p>{campaign.rewards}</p>
-                  <p>{campaign.conversionRate} conversion</p>
-                </div>
+
+                {campaign.qrImageBase64 && (
+                  <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+                    <img
+                      src={`data:image/png;base64,${campaign.qrImageBase64}`}
+                      alt={`Referral QR for ${campaign.code}`}
+                      className="h-28 w-28 rounded-xl border border-border bg-white p-2"
+                    />
+                    {campaign.shareUrl && (
+                      <a
+                        href={campaign.shareUrl}
+                        className="text-sm text-brand-500 underline underline-offset-4"
+                      >
+                        Open fallback share link
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </CardContent>

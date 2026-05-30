@@ -7,3 +7,4 @@ from .dispute import SwapDispute
 from .transaction import ChainTransaction
 from .user import User
 from .asset import Asset
+from .protocol import GovernanceProposal, ReferralCampaign, ReferralReward

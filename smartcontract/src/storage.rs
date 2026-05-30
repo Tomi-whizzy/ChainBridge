@@ -1,6 +1,7 @@
 use crate::types::{
     Chain, CrossChainSwap, DelegationRecord, GovernanceConfig, GovernanceProposal, HTLCStatus,
-    LiquidityPool, LiquidityPosition, ReferralRecord, StorageMetrics, SwapOrder, SwapStatus, HTLC,
+    LiquidityPool, LiquidityPosition, ProposalLifecycleEvent, ReferralRecord, ReferralRewardEntry,
+    StorageMetrics, SwapOrder, SwapStatus, HTLC,
 };
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
@@ -47,6 +48,12 @@ pub enum DataKey {
     Proposal(u64),
     ProposalVote(u64, Address),
     Delegation(Address),
+    DelegateeDelegators(Address),
+    VotingStake(Address),
+    ProposalLifecycleCount(u64),
+    ProposalLifecycle(u64, u64),
+    ReferralRewardCounter,
+    ReferralReward(u64),
     PoolCounter,
     Pool(u64),
     PoolRoute(String, String),
@@ -165,6 +172,129 @@ pub fn write_delegation(env: &Env, record: &DelegationRecord) {
     env.storage()
         .persistent()
         .set(&DataKey::Delegation(record.delegator.clone()), record);
+}
+
+pub fn read_voting_stake(env: &Env, holder: &Address) -> i128 {
+    env.storage()
+        .persistent()
+        .get(&DataKey::VotingStake(holder.clone()))
+        .unwrap_or(0)
+}
+
+pub fn write_voting_stake(env: &Env, holder: &Address, balance: i128) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::VotingStake(holder.clone()), &balance);
+}
+
+pub fn read_delegatee_delegators(env: &Env, delegatee: &Address) -> Vec<Address> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::DelegateeDelegators(delegatee.clone()))
+        .unwrap_or_else(|| Vec::new(env))
+}
+
+pub fn write_delegatee_delegators(env: &Env, delegatee: &Address, delegators: &Vec<Address>) {
+    env.storage().persistent().set(
+        &DataKey::DelegateeDelegators(delegatee.clone()),
+        delegators,
+    );
+}
+
+pub fn append_delegatee_delegator(env: &Env, delegatee: &Address, delegator: &Address) {
+    let mut delegators = read_delegatee_delegators(env, delegatee);
+    let mut found = false;
+    for existing in delegators.iter() {
+        if existing == *delegator {
+            found = true;
+            break;
+        }
+    }
+    if !found {
+        delegators.push_back(delegator.clone());
+        write_delegatee_delegators(env, delegatee, &delegators);
+    }
+}
+
+pub fn remove_delegatee_delegator(env: &Env, delegatee: &Address, delegator: &Address) {
+    let delegators = read_delegatee_delegators(env, delegatee);
+    let mut next = Vec::new(env);
+    for existing in delegators.iter() {
+        if existing != *delegator {
+            next.push_back(existing);
+        }
+    }
+    write_delegatee_delegators(env, delegatee, &next);
+}
+
+pub fn append_proposal_lifecycle_event(
+    env: &Env,
+    proposal_id: u64,
+    event: &ProposalLifecycleEvent,
+) -> u64 {
+    let sequence = env
+        .storage()
+        .persistent()
+        .get(&DataKey::ProposalLifecycleCount(proposal_id))
+        .unwrap_or(0)
+        + 1;
+    env.storage()
+        .persistent()
+        .set(&DataKey::ProposalLifecycleCount(proposal_id), &sequence);
+    env.storage().persistent().set(
+        &DataKey::ProposalLifecycle(proposal_id, sequence),
+        event,
+    );
+    sequence
+}
+
+pub fn read_proposal_lifecycle_event(
+    env: &Env,
+    proposal_id: u64,
+    sequence: u64,
+) -> Option<ProposalLifecycleEvent> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::ProposalLifecycle(proposal_id, sequence))
+}
+
+pub fn get_proposal_lifecycle_count(env: &Env, proposal_id: u64) -> u64 {
+    env.storage()
+        .persistent()
+        .get(&DataKey::ProposalLifecycleCount(proposal_id))
+        .unwrap_or(0)
+}
+
+pub fn increment_referral_reward_counter(env: &Env) -> u64 {
+    let counter = env
+        .storage()
+        .instance()
+        .get(&DataKey::ReferralRewardCounter)
+        .unwrap_or(0)
+        + 1;
+    env.storage()
+        .instance()
+        .set(&DataKey::ReferralRewardCounter, &counter);
+    counter
+}
+
+pub fn write_referral_reward(env: &Env, entry: &ReferralRewardEntry) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::ReferralReward(entry.id), entry);
+}
+
+pub fn get_referral_reward_counter(env: &Env) -> u64 {
+    env.storage()
+        .instance()
+        .get(&DataKey::ReferralRewardCounter)
+        .unwrap_or(0)
+}
+
+pub fn read_referral_reward(env: &Env, reward_id: u64) -> Option<ReferralRewardEntry> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::ReferralReward(reward_id))
 }
 
 pub fn get_pool_counter(env: &Env) -> u64 {
