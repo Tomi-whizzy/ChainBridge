@@ -70,6 +70,19 @@ pub fn create_htlc_with_algorithm(
     };
 
     storage::write_htlc(env, htlc_id, &htlc);
+
+    env.events().publish(
+        (symbol_short!("htlc"), symbol_short!("created")),
+        (
+            htlc_id,
+            htlc.sender,
+            htlc.receiver,
+            htlc.amount,
+            htlc.time_lock,
+            htlc.hash_algorithm,
+        ),
+    );
+
     Ok(htlc_id)
 }
 

@@ -67,7 +67,22 @@ jobs:
   backend:
     name: Backend (Python/FastAPI)
     runs-on: ubuntu-latest
-    
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: chainbridge
+          POSTGRES_PASSWORD: chainbridge
+          POSTGRES_DB: chainbridge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -99,6 +114,14 @@ jobs:
       run: |
         pytest backend/ --cov=backend --cov-report=xml --cov-report=html -v
       continue-on-error: true
+      env:
+        DATABASE_URL: postgresql+asyncpg://chainbridge:chainbridge@localhost:5432/chainbridge
+
+    - name: Check migrations
+      run: alembic check
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://chainbridge:chainbridge@localhost:5432/chainbridge
       
     - name: Upload coverage report
       uses: actions/upload-artifact@v3
