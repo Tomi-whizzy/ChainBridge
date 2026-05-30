@@ -9,6 +9,7 @@ import { CommandPalette } from "./CommandPalette";
 import { NAV_LINKS } from "./navigation";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { useSettingsStore } from "@/hooks/useSettings";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { SUPPORTED_LOCALES, stripLocaleFromPathname } from "@/lib/i18n/config";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const normalizedPathname = stripLocaleFromPathname(pathname);
   const { t, localizePath } = useI18n();
   const networkMode = useSettingsStore((s) => s.settings.network.mode);
+  const isAdmin = useIsAdmin();
 
   const header = (
     <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -95,7 +97,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
     >
       <nav aria-label="Mobile navigation links">
         <ul className="space-y-1" role="list">
-          {NAV_LINKS.map((link) => {
+          {NAV_LINKS.filter((link) => link.href !== "/admin" || isAdmin).map((link) => {
             const active = normalizedPathname === link.href;
             return (
               <li key={link.href}>
