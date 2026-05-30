@@ -19,7 +19,8 @@ use crate::error::Error;
 use crate::types::{
     AdvancedOrderConfig, Chain, ChainProof, CrossChainSwap, GovernanceConfig, GovernanceProposal,
     HTLCStatus, HashAlgorithm, LiquidityPool, LiquidityPosition, OptMultiSig, OptOrderExecution,
-    ReferralRecord, StorageMetrics, SwapOrder, VoteChoice, HTLC,
+    ProposalLifecycleEvent, ReferralRecord, ReferralRewardEntry, StorageMetrics, SwapOrder,
+    VoteChoice, HTLC,
 };
 
 #[contract]
@@ -381,16 +382,24 @@ impl ChainBridge {
         governance::init_governance(&env, config)
     }
 
+    pub fn set_voting_stake(env: Env, holder: Address, balance: i128) -> Result<(), Error> {
+        holder.require_auth();
+        governance::set_voting_stake(&env, &holder, balance)
+    }
+
+    pub fn get_voting_power(env: Env, voter: Address, proposal_id: u64) -> Result<i128, Error> {
+        governance::resolve_voting_power(&env, &voter, proposal_id)
+    }
+
     pub fn create_proposal(
         env: Env,
         proposer: Address,
         title: String,
         description: String,
         actions: Vec<String>,
-        voting_power: i128,
     ) -> Result<u64, Error> {
         proposer.require_auth();
-        governance::create_proposal(&env, &proposer, title, description, actions, voting_power)
+        governance::create_proposal(&env, &proposer, title, description, actions)
     }
 
     pub fn cast_vote(
@@ -398,10 +407,9 @@ impl ChainBridge {
         voter: Address,
         proposal_id: u64,
         choice: VoteChoice,
-        voting_power: i128,
-    ) -> Result<(), Error> {
+    ) -> Result<i128, Error> {
         voter.require_auth();
-        governance::cast_vote(&env, &voter, proposal_id, choice, voting_power)
+        governance::cast_vote(&env, &voter, proposal_id, choice)
     }
 
     pub fn execute_proposal(env: Env, proposal_id: u64) -> Result<(), Error> {
@@ -410,6 +418,10 @@ impl ChainBridge {
 
     pub fn get_proposal(env: Env, proposal_id: u64) -> Result<GovernanceProposal, Error> {
         storage::read_proposal(&env, proposal_id).ok_or(Error::OrderNotFound)
+    }
+
+    pub fn get_proposal_lifecycle(env: Env, proposal_id: u64) -> Vec<ProposalLifecycleEvent> {
+        governance::get_proposal_lifecycle(&env, proposal_id)
     }
 
     pub fn delegate_votes(env: Env, delegator: Address, delegatee: Address) -> Result<(), Error> {
@@ -469,8 +481,21 @@ impl ChainBridge {
         code: String,
         swap_id: u64,
         notional_amount: i128,
-    ) -> Result<(), Error> {
+    ) -> Result<u64, Error> {
         referral::record_referral_swap(&env, code, swap_id, notional_amount)
+    }
+
+    pub fn settle_referral_reward(env: Env, reward_id: u64) -> Result<(), Error> {
+        referral::settle_referral_reward(&env, reward_id)
+    }
+
+    pub fn claim_referral_rewards(env: Env, owner: Address, code: String) -> Result<i128, Error> {
+        owner.require_auth();
+        referral::claim_referral_rewards(&env, &owner, code)
+    }
+
+    pub fn get_referral_rewards(env: Env, code: String) -> Vec<ReferralRewardEntry> {
+        referral::get_referral_rewards(&env, code)
     }
 
     pub fn get_referral_record(env: Env, code: String) -> Result<ReferralRecord, Error> {

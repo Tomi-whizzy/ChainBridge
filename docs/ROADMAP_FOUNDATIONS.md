@@ -48,7 +48,35 @@ The current branch adds protocol-level foundations instead of a fully production
 ## Follow-Up Work
 
 - Replace mock frontend data with API-backed state.
-- Harden governance voting power calculations and delegation accounting.
 - Support multi-hop and best-price routing across several pools plus the order book.
-- Expand referral attribution into signed share links, QR payloads, and payout settlement.
-- Add dedicated unit and integration tests for edge cases around execution conditions and quorum math.
+- Add dedicated unit and integration tests for edge cases around execution conditions.
+
+## Governance Voting Power
+
+Effective voting power is computed deterministically on-chain and mirrored in the API:
+
+- `effective_power = self_power + delegated_in`
+- `self_power` is zero when the voter has an active outbound delegation.
+- `delegated_in` sums stake from delegators whose latest delegation targets the voter and who have not yet voted on the proposal.
+- Proposal creation requires `self_power >= proposal_threshold`; delegated power cannot be used to meet the threshold.
+- Quorum is `total_voting_supply * quorum_bps / 10_000`.
+
+Edge cases:
+
+- **Self-delegation**: rejected at delegation time.
+- **Double counting**: a delegator who delegated away cannot vote directly; their stake is counted only once through the delegatee.
+- **Stale delegation records**: only the latest delegation record for a delegator is honored; re-delegation removes the delegator from the previous delegatee index.
+
+## Proposal Lifecycle
+
+Each proposal stores an append-only lifecycle log. Status transitions (`active`, `succeeded`, `defeated`, `executed`) are persisted and returned through the protocol API for timeline rendering.
+
+## Referral Sharing and Settlement
+
+Referral share payloads include:
+
+- `qr_content`: deep link for mobile scanners (`chainbridge://refer?...`)
+- `share_url`: fallback web link for clients without QR support
+- `qr_image_base64`: PNG QR encoding of `qr_content`
+
+Referral rewards move through `pending` → `settled` → `claimed`. Campaign balances keep `rewards_pending`, `rewards_settled`, and `rewards_claimed` in sync after settlement and payout execution.

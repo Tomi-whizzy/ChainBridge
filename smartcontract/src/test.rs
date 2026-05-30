@@ -1718,10 +1718,14 @@ fn test_governance_proposal_lifecycle() {
             token_symbol: String::from_str(&env, "CBG"),
             quorum_bps: 2_000,
             proposal_threshold: 100,
+            total_voting_supply: 10_000,
             voting_period_secs: 100,
             timelock_secs: 10,
         },
     );
+
+    client.set_voting_stake(&proposer, &500);
+    client.set_voting_stake(&voter, &2000);
 
     let mut actions = soroban_sdk::Vec::new(&env);
     actions.push_back(String::from_str(&env, "set_fee_rate:25"));
@@ -1730,15 +1734,17 @@ fn test_governance_proposal_lifecycle() {
         &String::from_str(&env, "Lower protocol fee"),
         &String::from_str(&env, "Reduce taker fees via governance"),
         &actions,
-        &500,
     );
 
-    client.cast_vote(&voter, &proposal_id, &VoteChoice::For, &500);
+    client.cast_vote(&voter, &proposal_id, &VoteChoice::For);
     env.ledger().set_timestamp(env.ledger().timestamp() + 120);
     client.execute_proposal(&proposal_id);
 
     let proposal = client.get_proposal(&proposal_id);
     assert_eq!(proposal.status, ProposalStatus::Executed);
+
+    let lifecycle = client.get_proposal_lifecycle(&proposal_id);
+    assert!(lifecycle.len() >= 2);
 }
 
 #[test]
@@ -1812,10 +1818,63 @@ fn test_advanced_order_amendment_and_referral_tracking() {
     assert_eq!(order.to_amount, 2_200);
 
     client.register_referral_code(&owner, &String::from_str(&env, "FROST"));
-    client.record_referral_swap(&String::from_str(&env, "FROST"), &77, &10_000);
+    let reward_id = client.record_referral_swap(&String::from_str(&env, "FROST"), &77, &10_000);
     let referral = client.get_referral_record(&String::from_str(&env, "FROST"));
     assert_eq!(referral.uses, 1);
     assert_eq!(referral.rewards_earned, 100);
+    assert_eq!(referral.rewards_pending, 100);
+
+    client.settle_referral_reward(&reward_id);
+    let settled = client.get_referral_record(&String::from_str(&env, "FROST"));
+    assert_eq!(settled.rewards_pending, 0);
+    assert_eq!(settled.rewards_settled, 100);
+
+    let claimed = client.claim_referral_rewards(&owner, &String::from_str(&env, "FROST"));
+    assert_eq!(claimed, 100);
+    let claimed_record = client.get_referral_record(&String::from_str(&env, "FROST"));
+    assert_eq!(claimed_record.rewards_settled, 0);
+    assert_eq!(claimed_record.rewards_claimed, 100);
+}
+
+#[test]
+fn test_governance_delegated_voting_power() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let delegator = Address::generate(&env);
+    let delegatee = Address::generate(&env);
+
+    client.init(&admin);
+    client.init_governance(
+        &admin,
+        &GovernanceConfig {
+            token_symbol: String::from_str(&env, "CBG"),
+            quorum_bps: 1_000,
+            proposal_threshold: 100,
+            total_voting_supply: 10_000,
+            voting_period_secs: 100,
+            timelock_secs: 10,
+        },
+    );
+
+    client.set_voting_stake(&delegator, &300);
+    client.set_voting_stake(&delegatee, &200);
+    client.delegate_votes(&delegator, &delegatee);
+
+    let mut actions = soroban_sdk::Vec::new(&env);
+    actions.push_back(String::from_str(&env, "set_fee_rate:25"));
+    client.set_voting_stake(&delegatee, &200);
+    let proposal_id = client.create_proposal(
+        &delegatee,
+        &String::from_str(&env, "Delegated vote test"),
+        &String::from_str(&env, "Verify delegated voting power"),
+        &actions,
+    );
+
+    let effective = client.get_voting_power(&delegatee, &proposal_id);
+    assert_eq!(effective, 500);
+
+    let used = client.cast_vote(&delegatee, &proposal_id, &VoteChoice::For);
+    assert_eq!(used, 500);
 }
 
 // =============================================================================
