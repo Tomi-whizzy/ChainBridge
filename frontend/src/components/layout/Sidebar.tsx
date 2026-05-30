@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { NAV_LINKS } from "./navigation";
+import { PRIMARY_NAV_LINKS, SECONDARY_NAV_LINKS } from "./navigation";
 import { Layers, ChevronRight } from "lucide-react";
 import { stripLocaleFromPathname } from "@/lib/i18n/config";
 import { shouldPrefetch } from "@/lib/prefetch";
@@ -33,8 +33,9 @@ export function Sidebar() {
 
       {/* Sidebar Navigation */}
       <nav className="flex-1 overflow-y-auto py-6 px-3 no-scrollbar" aria-label="Main Navigation">
+        {/* Primary workflow actions */}
         <ul className="space-y-1.5" role="list">
-          {NAV_LINKS.filter((link) => link.href !== "/admin" || isAdmin).map((link) => {
+          {PRIMARY_NAV_LINKS.map((link) => {
             const isActive = normalizedPathname === link.href;
             return (
               <li key={link.href}>
@@ -50,7 +51,51 @@ export function Sidebar() {
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    {/* Visual indicator for active state */}
+                    <div
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full transition-all duration-300",
+                        isActive
+                          ? "bg-brand-500 scale-100"
+                          : "bg-transparent scale-0 group-hover:bg-text-muted/30 group-hover:scale-100"
+                      )}
+                    />
+                    {t(link.key)}
+                  </div>
+                  {isActive && (
+                    <ChevronRight
+                      size={14}
+                      className="animate-in slide-in-from-left-1 duration-300"
+                    />
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Divider between primary and secondary */}
+        <div className="my-4 px-2">
+          <div className="h-px bg-border" role="separator" aria-hidden="true" />
+        </div>
+
+        {/* Secondary / admin / info routes */}
+        <ul className="space-y-1.5" role="list">
+          {SECONDARY_NAV_LINKS.filter((link) => link.href !== "/admin" || isAdmin).map((link) => {
+            const isActive = normalizedPathname === link.href;
+            return (
+              <li key={link.href}>
+                <Link
+                  href={localizePath(link.href)}
+                  prefetch={shouldPrefetch(link.href, normalizedPathname)}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "group flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-brand-500/10 text-brand-500 shadow-sm"
+                      : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
                     <div
                       className={cn(
                         "h-1.5 w-1.5 rounded-full transition-all duration-300",
