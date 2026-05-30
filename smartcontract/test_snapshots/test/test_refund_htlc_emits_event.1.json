@@ -23,11 +23,11 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 5000
+                    "lo": 1000
                   }
                 },
                 {
-                  "bytes": "84126d0dd850199be29021aadbaee68cb9199047b1cb7ec9894ddb1e3562783c"
+                  "bytes": "72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793"
                 },
                 {
                   "u64": 1000100
@@ -67,8 +67,7 @@
           "sub_invocations": []
         }
       ]
-    ],
-    []
+    ]
   ],
   "ledger": {
     "protocol_version": 21,
@@ -124,7 +123,7 @@
                       "val": {
                         "i128": {
                           "hi": 0,
-                          "lo": 5000
+                          "lo": 1000
                         }
                       }
                     },
@@ -153,7 +152,7 @@
                         "symbol": "hash_lock"
                       },
                       "val": {
-                        "bytes": "84126d0dd850199be29021aadbaee68cb9199047b1cb7ec9894ddb1e3562783c"
+                        "bytes": "72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793"
                       }
                     },
                     {
@@ -442,11 +441,11 @@
                 {
                   "i128": {
                     "hi": 0,
-                    "lo": 5000
+                    "lo": 1000
                   }
                 },
                 {
-                  "bytes": "84126d0dd850199be29021aadbaee68cb9199047b1cb7ec9894ddb1e3562783c"
+                  "bytes": "72cd6e8422c407fb6d098690f1130b7ded7ec2f7f5e1d30bd9d521f015363793"
                 },
                 {
                   "u64": 1000100
@@ -567,59 +566,6 @@
               }
             ],
             "data": "void"
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_call"
-              },
-              {
-                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
-              },
-              {
-                "symbol": "get_htlc_status"
-              }
-            ],
-            "data": {
-              "u64": 1
-            }
-          }
-        }
-      },
-      "failed_call": false
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "fn_return"
-              },
-              {
-                "symbol": "get_htlc_status"
-              }
-            ],
-            "data": {
-              "vec": [
-                {
-                  "symbol": "Refunded"
-                }
-              ]
-            }
           }
         }
       },

@@ -63,6 +63,7 @@ pub enum SwapStatus {
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum AdvancedOrderType {
     Market,
     Limit,
@@ -119,7 +120,7 @@ pub struct SwapOrder {
     /// Order execution mode for advanced order support.
     pub order_type: AdvancedOrderType,
     /// Optional trigger/conditional execution settings.
-    pub execution: Option<OrderExecutionCondition>,
+    pub execution: OptOrderExecution,
     /// Number of amendments applied to the order.
     pub amendment_count: u32,
 }
@@ -171,6 +172,29 @@ pub struct StorageMetrics {
 #[contracttype]
 pub struct HTLCCleanupQueue {
     pub htlc_ids: soroban_sdk::Vec<u64>,
+}
+
+/// Soroban-compatible optional wrapper for `OrderExecutionCondition`.
+///
+/// `Option<OrderExecutionCondition>` cannot be used directly as a `#[contracttype]`
+/// field because the soroban XDR layer does not generate a `TryFrom<ScVal>` impl for
+/// `Option<CustomContractType>`. This enum is the idiomatic workaround (same pattern
+/// as `OptMultiSig`).
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum OptOrderExecution {
+    None,
+    Config(OrderExecutionCondition),
+}
+
+/// Groups the advanced-order parameters that would otherwise push `create_advanced_order`
+/// past Soroban's 10-parameter contract-function limit.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AdvancedOrderConfig {
+    pub min_fill_amount: i128,
+    pub order_type: AdvancedOrderType,
+    pub execution: OptOrderExecution,
 }
 
 #[contracttype]

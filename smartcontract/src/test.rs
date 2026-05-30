@@ -2,11 +2,12 @@
 
 use super::*;
 use crate::types::{
-    AdvancedOrderType, GovernanceConfig, HashAlgorithm, ProposalStatus, VoteChoice,
+    AdvancedOrderConfig, AdvancedOrderType, GovernanceConfig, HashAlgorithm, OptMultiSig,
+    ProposalStatus, VoteChoice,
 };
 use soroban_sdk::{
     testutils::{Address as _, Ledger as _},
-    Address, Bytes, BytesN, Env, String, Vec,
+    Address, Bytes, BytesN, Env, String,
 };
 
 fn setup_contract() -> (Env, Address, ChainBridgeClient<'static>) {
@@ -1133,8 +1134,6 @@ fn test_partial_fill_order_stays_open() {
         &2000,
         &expiry,
         &250,
-        &AdvancedOrderType::Market,
-        &None,
     );
 
     client.match_order_partial(&counterparty, &order_id, &250);
@@ -1168,8 +1167,6 @@ fn test_partial_fill_multiple_fills_completes_order() {
         &2000,
         &expiry,
         &250,
-        &AdvancedOrderType::Market,
-        &None,
     );
 
     client.match_order_partial(&cp1, &order_id, &250);
@@ -1203,8 +1200,6 @@ fn test_partial_fill_below_min_fill_rejected() {
         &2000,
         &expiry,
         &250,
-        &AdvancedOrderType::Market,
-        &None,
     );
 
     // 249 < min_fill_amount (250)
@@ -1232,8 +1227,6 @@ fn test_partial_fill_above_remaining_rejected() {
         &2000,
         &expiry,
         &250,
-        &AdvancedOrderType::Market,
-        &None,
     );
 
     // 1001 > from_amount (1000)
@@ -1561,8 +1554,6 @@ fn test_multi_party_partial_fill() {
         &15000,
         &expiry,
         &200,
-        &AdvancedOrderType::Market,
-        &None,
     );
 
     for _ in 0..5 {
@@ -1795,17 +1786,27 @@ fn test_advanced_order_amendment_and_referral_tracking() {
         &1_000,
         &2_000,
         &expiry,
-        &250,
-        &AdvancedOrderType::Limit,
-        &Some(crate::types::OrderExecutionCondition {
-            trigger_price_numerator: 2,
-            trigger_price_denominator: 1,
-            execute_after: env.ledger().timestamp(),
-            allow_partial_fills: true,
-        }),
+        &AdvancedOrderConfig {
+            min_fill_amount: 250,
+            order_type: AdvancedOrderType::Limit,
+            execution: crate::types::OptOrderExecution::Config(
+                crate::types::OrderExecutionCondition {
+                    trigger_price_numerator: 2,
+                    trigger_price_denominator: 1,
+                    execute_after: env.ledger().timestamp(),
+                    allow_partial_fills: true,
+                },
+            ),
+        },
     );
 
-    client.amend_order(&creator, &order_id, &2_200, &(expiry + 100), &None);
+    client.amend_order(
+        &creator,
+        &order_id,
+        &2_200,
+        &(expiry + 100),
+        &crate::types::OptOrderExecution::None,
+    );
     let order = client.get_order(&order_id);
     assert_eq!(order.amendment_count, 1);
     assert_eq!(order.to_amount, 2_200);
@@ -1815,4 +1816,139 @@ fn test_advanced_order_amendment_and_referral_tracking() {
     let referral = client.get_referral_record(&String::from_str(&env, "FROST"));
     assert_eq!(referral.uses, 1);
     assert_eq!(referral.rewards_earned, 100);
+}
+
+// =============================================================================
+// ISSUE #461: EMIT EVENT FOR HTLC CLAIM
+// =============================================================================
+
+#[test]
+fn test_claim_htlc_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+
+    client.init(&admin);
+
+    let secret = Bytes::from_slice(&env, &[1u8; 32]);
+    let hash_lock: BytesN<32> = env.crypto().sha256(&secret).into();
+    let time_lock = env.ledger().timestamp() + 86400;
+
+    let htlc_id = client.create_htlc(
+        &sender,
+        &receiver,
+        &1000,
+        &hash_lock,
+        &time_lock,
+        &OptMultiSig::None,
+    );
+
+    client.claim_htlc(&receiver, &htlc_id, &secret);
+
+    // Verify the claim event was emitted
+    let events = env.events().all();
+    assert!(!events.is_empty(), "claim_htlc must emit at least one event");
+
+    // The last emitted event belongs to our contract
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+
+    // Event has two topics: the "htlc" namespace and the "claimed" action
+    assert_eq!(topics.len(), 2, "claim event must carry exactly two topics");
+}
+
+// =============================================================================
+// ISSUE #462: EMIT EVENT FOR HTLC REFUND
+// =============================================================================
+
+#[test]
+fn test_refund_htlc_emits_event() {
+    use soroban_sdk::testutils::Events as _;
+
+    let (env, contract_id, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+
+    client.init(&admin);
+
+    let htlc_id = create_test_htlc(&env, &client, &sender, &receiver, 1000, &[1u8; 32], 100);
+
+    // Advance past the timelock so the refund is valid
+    env.ledger().set_timestamp(env.ledger().timestamp() + 101);
+    client.refund_htlc(&sender, &htlc_id);
+
+    // Verify the refund event was emitted
+    let events = env.events().all();
+    assert!(!events.is_empty(), "refund_htlc must emit at least one event");
+
+    // The last emitted event belongs to our contract
+    let (emitted_contract, topics, _data) = events.last().unwrap();
+    assert_eq!(emitted_contract, contract_id);
+
+    // Event has two topics: the "htlc" namespace and the "refunded" action
+    assert_eq!(topics.len(), 2, "refund event must carry exactly two topics");
+}
+
+// =============================================================================
+// ISSUE #469: CLEANUP LIMIT — PARTIAL CLEANUP OVER MULTIPLE CALLS
+// =============================================================================
+
+#[test]
+fn test_cleanup_expired_htlcs_partial_then_remainder() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+
+    client.init(&admin);
+
+    // Create 5 HTLCs and mark all of them for cleanup
+    let mut htlc_ids = soroban_sdk::Vec::new(&env);
+    for i in 0u8..5 {
+        let htlc_id =
+            create_test_htlc(&env, &client, &sender, &receiver, 100, &[i + 1; 32], 100);
+        htlc_ids.push_back(htlc_id);
+        client.mark_htlc_expired(&htlc_id);
+    }
+
+    // First pass: clean only 2 of the 5
+    let cleaned_first = client.cleanup_expired_htlcs(&2u32);
+    assert_eq!(cleaned_first, 2, "first call should process exactly 2 HTLCs");
+
+    // Second pass: clean 2 more (of the remaining 3)
+    let cleaned_second = client.cleanup_expired_htlcs(&2u32);
+    assert_eq!(cleaned_second, 2, "second call should process exactly 2 more HTLCs");
+
+    // Third pass: clean the last 1
+    let cleaned_third = client.cleanup_expired_htlcs(&2u32);
+    assert_eq!(cleaned_third, 1, "third call should process the final HTLC");
+
+    // Queue is now empty — further calls return 0
+    let cleaned_empty = client.cleanup_expired_htlcs(&2u32);
+    assert_eq!(cleaned_empty, 0, "cleanup on empty queue must return 0");
+}
+
+#[test]
+fn test_cleanup_expired_htlcs_zero_limit_uses_default_batch() {
+    let (env, _, client) = setup_contract();
+    let admin = Address::generate(&env);
+    let sender = Address::generate(&env);
+    let receiver = Address::generate(&env);
+
+    client.init(&admin);
+
+    // Enqueue 3 HTLCs
+    for i in 0u8..3 {
+        let htlc_id =
+            create_test_htlc(&env, &client, &sender, &receiver, 100, &[i + 1; 32], 100);
+        client.mark_htlc_expired(&htlc_id);
+    }
+
+    // limit = 0 should use the default batch (≥ 3) and clean all
+    let cleaned = client.cleanup_expired_htlcs(&0u32);
+    assert_eq!(cleaned, 3, "limit=0 should use default batch and clean all 3");
 }

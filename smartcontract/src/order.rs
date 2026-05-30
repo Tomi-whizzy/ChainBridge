@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::storage;
-use crate::types::{AdvancedOrderType, Chain, OrderExecutionCondition, SwapOrder, SwapStatus};
+use crate::types::{AdvancedOrderType, Chain, OptOrderExecution, SwapOrder, SwapStatus};
 use soroban_sdk::{Address, Env, String};
 
 #[allow(clippy::too_many_arguments)]
@@ -32,7 +32,7 @@ pub fn create_order(
         expiry,
         from_amount,
         AdvancedOrderType::Market,
-        None,
+        OptOrderExecution::None,
     )
 }
 
@@ -57,7 +57,7 @@ pub fn create_order_with_min_fill(
     expiry: u64,
     min_fill_amount: i128,
     order_type: AdvancedOrderType,
-    execution: Option<OrderExecutionCondition>,
+    execution: OptOrderExecution,
 ) -> Result<u64, Error> {
     if storage::is_paused(env) {
         return Err(Error::Paused);
@@ -115,7 +115,7 @@ pub fn create_advanced_order(
     expiry: u64,
     min_fill_amount: i128,
     order_type: AdvancedOrderType,
-    execution: Option<OrderExecutionCondition>,
+    execution: OptOrderExecution,
 ) -> Result<u64, Error> {
     create_order_with_min_fill(
         env,
@@ -258,7 +258,7 @@ pub fn amend_order(
     order_id: u64,
     to_amount: i128,
     expiry: u64,
-    execution: Option<OrderExecutionCondition>,
+    execution: OptOrderExecution,
 ) -> Result<(), Error> {
     let mut order = storage::read_order(env, order_id).ok_or(Error::OrderNotFound)?;
     if order.creator != *creator {
