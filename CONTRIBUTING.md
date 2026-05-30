@@ -362,6 +362,17 @@ If hooks fail, fix the issues and try committing again.
 - Docstrings for classes and functions
 - Write unit tests
 
+#### Linting
+
+The backend uses `black` (formatting), `flake8` (linting), and `mypy` (type checking).
+Install the dev dependencies and run the lint target:
+
+```bash
+cd backend
+pip install flake8 black mypy
+make lint
+```
+
 ## Commit Message Format
 
 ```

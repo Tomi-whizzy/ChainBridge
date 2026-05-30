@@ -176,6 +176,21 @@ impl ChainBridge {
         Ok(())
     }
 
+    /// Transfer admin privileges to a new address.
+    ///
+    /// The current admin must authorize the transfer. After transfer,
+    /// the new admin can call admin-only functions and the old admin
+    /// loses all admin privileges.
+    pub fn transfer_admin(env: Env, current_admin: Address, new_admin: Address) -> Result<(), Error> {
+        current_admin.require_auth();
+        let stored_admin = storage::read_admin(&env);
+        if current_admin != stored_admin {
+            return Err(Error::Unauthorized);
+        }
+        storage::write_admin(&env, &new_admin);
+        Ok(())
+    }
+
     /// Set Fee Rate
     pub fn set_fee_rate(env: Env, admin: Address, rate: u32) -> Result<(), Error> {
         admin.require_auth();

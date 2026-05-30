@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::storage;
 use crate::types::{AdvancedOrderType, Chain, OptOrderExecution, SwapOrder, SwapStatus};
-use soroban_sdk::{Address, Env, String};
+use soroban_sdk::{symbol_short, Address, Env, String};
 
 #[allow(clippy::too_many_arguments)]
 /// Create an order with the full amount as the minimum fill (no partial fills).
@@ -99,6 +99,12 @@ pub fn create_order_with_min_fill(
 
     storage::write_order(env, order_id, &order);
     storage::add_order_to_chain_index(env, &from_chain, &to_chain, order_id);
+
+    env.events().publish(
+        (symbol_short!("order"), symbol_short!("created")),
+        (order_id, from_chain.clone(), to_chain.clone()),
+    );
+
     Ok(order_id)
 }
 
@@ -185,9 +191,21 @@ pub fn match_order_partial(
     order.filled_amount += fill_amount;
     order.counterparty = Some(counterparty.clone());
 
-    if order.filled_amount >= order.from_amount {
+    let is_full_match = order.filled_amount >= order.from_amount;
+
+    if is_full_match {
         order.status = SwapStatus::Completed;
         storage::remove_order_from_chain_index(env, &order.from_chain, &order.to_chain, order_id);
+
+        env.events().publish(
+            (symbol_short!("order"), symbol_short!("matched")),
+            (order_id, order.from_chain.clone(), order.to_chain.clone()),
+        );
+    } else {
+        env.events().publish(
+            (symbol_short!("order"), symbol_short!("partial")),
+            (order_id, order.from_chain.clone(), order.to_chain.clone()),
+        );
     }
 
     storage::write_order(env, order_id, &order);
@@ -228,6 +246,12 @@ pub fn cancel_order(env: &Env, creator: &Address, order_id: u64) -> Result<(), E
 
     storage::remove_order_from_chain_index(env, &order.from_chain, &order.to_chain, order_id);
     storage::remove_order(env, order_id);
+
+    env.events().publish(
+        (symbol_short!("order"), symbol_short!("cancelled")),
+        (order_id, order.from_chain, order.to_chain),
+    );
+
     Ok(())
 }
 
@@ -249,6 +273,12 @@ pub fn expire_order(env: &Env, order_id: u64) -> Result<(), Error> {
     order.status = SwapStatus::Expired;
     storage::remove_order_from_chain_index(env, &order.from_chain, &order.to_chain, order_id);
     storage::write_order(env, order_id, &order);
+
+    env.events().publish(
+        (symbol_short!("order"), symbol_short!("expired")),
+        (order_id, order.from_chain, order.to_chain),
+    );
+
     Ok(())
 }
 
