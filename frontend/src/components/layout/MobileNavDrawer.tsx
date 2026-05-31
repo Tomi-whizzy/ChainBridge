@@ -6,7 +6,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { WalletConnect } from "@/components/swap/WalletConnect";
 import { CommandPalette } from "./CommandPalette";
-import { NAV_LINKS } from "./navigation";
+import { PRIMARY_NAV_LINKS, SECONDARY_NAV_LINKS } from "./navigation";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { useSettingsStore } from "@/hooks/useSettings";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -96,8 +96,44 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
       aria-label="Mobile navigation"
     >
       <nav aria-label="Mobile navigation links">
+        {/* Primary workflow actions */}
         <ul className="space-y-1" role="list">
-          {NAV_LINKS.filter((link) => link.href !== "/admin" || isAdmin).map((link) => {
+          {PRIMARY_NAV_LINKS.map((link) => {
+            const active = normalizedPathname === link.href;
+            return (
+              <li key={link.href}>
+                <Link
+                  href={localizePath(link.href)}
+                  onClick={onClose}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center rounded-xl px-4 py-3 text-base font-medium transition-all",
+                    active
+                      ? "bg-brand-500/10 text-brand-500"
+                      : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary active:bg-surface-overlay"
+                  )}
+                >
+                  {t(link.key)}
+                  {active && (
+                    <div
+                      className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-500"
+                      aria-hidden="true"
+                    />
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Divider between primary and secondary */}
+        <div className="my-3 px-2">
+          <div className="h-px bg-border" role="separator" aria-hidden="true" />
+        </div>
+
+        {/* Secondary / admin / info routes */}
+        <ul className="space-y-1" role="list">
+          {SECONDARY_NAV_LINKS.filter((link) => link.href !== "/admin" || isAdmin).map((link) => {
             const active = normalizedPathname === link.href;
             return (
               <li key={link.href}>
